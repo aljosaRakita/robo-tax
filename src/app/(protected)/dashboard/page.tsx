@@ -12,20 +12,9 @@ import type {
   CategoryInfo,
 } from "@/lib/types";
 
-interface Stats {
-  total: number;
-  connected: number;
-  percentage: number;
-}
-
 export default function DashboardPage() {
   const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
-  const [stats, setStats] = useState<Stats>({
-    total: 0,
-    connected: 0,
-    percentage: 0,
-  });
   const [currentStep, setCurrentStep] = useState(0);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -37,7 +26,6 @@ export default function DashboardPage() {
         const data = await res.json();
         setPowerUps(data.powerUps);
         setCategories(data.categories);
-        setStats(data.stats);
       } finally {
         setLoading(false);
       }
@@ -47,22 +35,17 @@ export default function DashboardPage() {
 
   const handleToggle = useCallback(
     async (id: string, action: "connect" | "disconnect") => {
-      const res = await fetch("/api/power-ups/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ powerUpId: id, action }),
-      });
-
-      if (!res.ok) return;
-
-      const data = await res.json();
-
       setPowerUps((prev) =>
         prev.map((p) =>
           p.id === id ? { ...p, connected: action === "connect" } : p
         )
       );
-      setStats(data.stats);
+
+      await fetch("/api/power-ups/connect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ powerUpId: id, action }),
+      });
     },
     []
   );
@@ -71,6 +54,16 @@ export default function DashboardPage() {
     () => powerUps.filter((p) => p.connected).map((p) => p.id),
     [powerUps]
   );
+
+  const stats = useMemo(() => {
+    const total = powerUps.length;
+    const connected = powerUps.filter((p) => p.connected).length;
+    return {
+      total,
+      connected,
+      percentage: total > 0 ? Math.round((connected / total) * 100) : 0,
+    };
+  }, [powerUps]);
 
   const { connectedByCategory, totalByCategory } = useMemo(() => {
     const connected: Record<string, number> = {};
@@ -93,12 +86,12 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-6 p-4 pt-6">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto max-w-6xl space-y-8 p-6 pt-10">
+        <Skeleton className="h-24 w-full rounded-2xl bg-white/5" />
+        <Skeleton className="h-12 w-full rounded-xl bg-white/5" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 w-full" />
+            <Skeleton key={i} className="h-44 w-full rounded-2xl bg-white/5" />
           ))}
         </div>
       </div>
@@ -106,14 +99,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-4 pt-6 pb-24">
+    <div className="mx-auto max-w-6xl space-y-8 p-6 pt-10 pb-32">
       <ProgressHeader
         connected={stats.connected}
         total={stats.total}
         percentage={stats.percentage}
       />
 
-      <Separator />
+      <Separator className="bg-white/5" />
 
       <CategoryStepper
         categories={categories}
@@ -133,8 +126,8 @@ export default function DashboardPage() {
         />
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 p-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto max-w-5xl">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-background/80 p-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto max-w-6xl">
           <SavingsDialog
             percentage={stats.percentage}
             connectedIds={connectedIds}

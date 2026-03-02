@@ -45,9 +45,9 @@ export function CategoryStepper({
   const isLast = currentStep === categories.length - 1;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Step indicators */}
-      <div className="flex items-center gap-1 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div className="flex items-center gap-2 overflow-x-auto pb-4 -mx-6 px-6 sm:mx-0 sm:px-0 sm:gap-1 scrollbar-hide">
         {categories.map((cat, idx) => {
           const Icon = iconMap[cat.icon] ?? Puzzle;
           const connected = connectedByCategory[cat.id] ?? 0;
@@ -61,28 +61,30 @@ export function CategoryStepper({
               <button
                 onClick={() => onStepChange(idx)}
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+                  "flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300",
                   isCurrent
-                    ? "border-primary bg-primary text-primary-foreground"
+                    ? "border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                     : isComplete
-                      ? "border-green-500/50 bg-green-50 text-green-700"
+                      ? "border-primary/30 bg-primary/10 text-primary"
                       : isPast
-                        ? "border-border bg-accent text-foreground"
-                        : "border-border bg-background text-muted-foreground hover:bg-accent"
+                        ? "border-white/10 bg-white/5 text-foreground"
+                        : "border-white/5 bg-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
                 )}
               >
                 {isComplete ? (
-                  <Check className="h-3.5 w-3.5" />
+                  <Check className="h-4 w-4" />
                 ) : (
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-4 w-4" />
                 )}
                 <span className="hidden sm:inline">{cat.label}</span>
                 <span
                   className={cn(
-                    "text-xs tabular-nums",
+                    "text-xs tabular-nums rounded-full px-1.5 py-0.5",
                     isCurrent
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground"
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : isComplete
+                        ? "bg-primary/20 text-primary"
+                        : "bg-white/10 text-muted-foreground"
                   )}
                 >
                   {connected}/{total}
@@ -91,8 +93,8 @@ export function CategoryStepper({
               {idx < categories.length - 1 && (
                 <div
                   className={cn(
-                    "mx-1 h-px w-4 shrink-0",
-                    idx < currentStep ? "bg-green-400" : "bg-border"
+                    "mx-2 h-px w-6 shrink-0 transition-colors duration-300 sm:hidden",
+                    idx < currentStep ? "bg-primary/50" : "bg-white/10"
                   )}
                 />
               )}
@@ -102,40 +104,40 @@ export function CategoryStepper({
       </div>
 
       {/* Current step header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] p-4">
         <div>
-          <h3 className="text-lg font-semibold">
+          <h3 className="text-xl font-semibold text-foreground">
             {categories[currentStep]?.label}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-1">
             {categories[currentStep]?.description}
           </p>
         </div>
-        <span className="text-sm font-medium text-muted-foreground">
-          Step {currentStep + 1} of {categories.length}
-        </span>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isFirst}
-          onClick={() => onStepChange(currentStep - 1)}
-        >
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isLast}
-          onClick={() => onStepChange(currentStep + 1)}
-        >
-          Next
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-4">
+          <span className="hidden sm:inline-block text-sm font-medium text-muted-foreground">
+            Step {currentStep + 1} of {categories.length}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-white/10 bg-transparent hover:bg-white/10"
+              disabled={isFirst}
+              onClick={() => onStepChange(currentStep - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 border-white/10 bg-transparent hover:bg-white/10"
+              disabled={isLast}
+              onClick={() => onStepChange(currentStep + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

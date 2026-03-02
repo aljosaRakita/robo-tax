@@ -51,20 +51,20 @@ export default function LoginPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>
+    <Card className="glass-panel border-0 bg-card/40 p-2 sm:p-4">
+      <CardHeader className="space-y-3 pb-6">
+        <CardTitle className="text-2xl font-semibold tracking-tight">Welcome back</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
           Sign in to your RoboTax account
-          <span className="mt-1 block text-xs font-medium text-primary">
+          <span className="mt-3 flex items-center rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary border border-primary/20">
             Demo: demo@robotax.com / demo1234
           </span>
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+        <CardContent className="space-y-5 pb-6">
+          <div className="space-y-2.5">
+            <Label htmlFor="email" className="text-sm font-medium text-foreground/90">Email</Label>
             <Input
               id="email"
               type="email"
@@ -72,10 +72,16 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-sm font-medium text-foreground/90">Password</Label>
+              <Link href="#" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+                Forgot password?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"
@@ -83,19 +89,24 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
             />
           </div>
         </CardContent>
-        <CardFooter className="flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <CardFooter className="flex flex-col gap-4 pt-2">
+          <Button 
+            type="submit" 
+            className="w-full h-11 text-base font-medium shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] transition-all duration-300" 
+            disabled={loading}
+          >
+            {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
             Sign in
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"
-              className="font-medium text-primary hover:underline"
+              className="font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Create one
             </Link>

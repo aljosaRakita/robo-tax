@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Loader2,
   Calculator,
   AlertTriangle,
-  DollarSign,
-  Phone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,16 +26,14 @@ interface SavingsDialogProps {
 }
 
 export function SavingsDialog({ percentage, connectedIds }: SavingsDialogProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<SavingsResponse | null>(null);
 
   const isReady = percentage >= 30;
 
   async function handleCalculate() {
-    setOpen(true);
     setLoading(true);
-    setResult(null);
 
     try {
       const res = await fetch("/api/savings/calculate", {
@@ -45,187 +42,92 @@ export function SavingsDialog({ percentage, connectedIds }: SavingsDialogProps) 
         body: JSON.stringify({ connectedIds }),
       });
       const data: SavingsResponse = await res.json();
-      setResult(data);
+
+      if (data.lowConfidence) {
+        setOpen(true);
+        setLoading(false);
+        return;
+      }
+
+      if (data.estimate) {
+        localStorage.setItem("robotax-results", JSON.stringify(data.estimate));
+        router.push("/results");
+      }
     } catch {
-      setResult({
-        success: false,
-        lowConfidence: false,
-        warning: "Failed to calculate savings. Please try again.",
-      });
+      setOpen(true);
     } finally {
       setLoading(false);
     }
   }
 
-  function formatCurrency(amount: number): string {
-    if (amount >= 1000) {
-      return `$${Math.round(amount / 1000)}k`;
-    }
-    return `$${amount.toLocaleString()}`;
-  }
-
   return (
     <>
-      <div className="flex items-center justify-between gap-4">
-        <div className="hidden text-sm text-muted-foreground sm:block">
-          {isReady
-            ? "Your data is ready for analysis"
-            : `Connect at least 30% of sources to unlock savings estimate`}
+      <div className="flex items-center justify-between gap-6">
+        <div className="hidden sm:flex flex-col">
+          <span className="text-sm font-medium text-foreground">
+            {isReady ? "Ready for Analysis" : "More Data Needed"}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {isReady
+              ? "We have enough data to estimate your tax savings."
+              : "Connect at least 30% of sources to unlock savings estimate."}
+          </span>
         </div>
         <Button
           onClick={handleCalculate}
           size="lg"
+          disabled={loading}
           className={cn(
-            "w-full gap-2 text-base font-semibold shadow-lg sm:w-auto",
-            isReady && "animate-glow"
+            "w-full gap-3 text-base font-semibold transition-all duration-500 sm:w-auto h-14 px-8 rounded-xl",
+            isReady && !loading 
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] animate-glow" 
+              : "bg-white/5 text-muted-foreground hover:bg-white/10"
           )}
         >
-          <Calculator className="h-5 w-5" />
-          Calculate Tax Savings
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Calculator className="h-5 w-5" />
+          )}
+          {loading ? "Analyzing Data..." : "Calculate Tax Savings"}
         </Button>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md">
-          {loading && (
-            <div className="flex flex-col items-center gap-6 py-8">
-              <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              <div className="space-y-2 text-center">
-                <DialogTitle className="text-lg">
-                  Analyzing your data...
-                </DialogTitle>
-                <DialogDescription>
-                  Matching against 435+ tax strategies
-                </DialogDescription>
-              </div>
-              <Progress value={66} className="h-2 w-48" />
+        <DialogContent className="max-w-md border-white/10 bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+              <AlertTriangle className="h-8 w-8 text-amber-500" />
             </div>
-          )}
-
-          {!loading && result?.lowConfidence && (
-            <>
-              <DialogHeader>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-yellow-100">
-                  <AlertTriangle className="h-7 w-7 text-yellow-600" />
-                </div>
-                <DialogTitle className="text-center text-lg">
-                  Not enough data yet
-                </DialogTitle>
-                <DialogDescription className="text-center">
-                  {result.warning}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col items-center gap-2 py-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>Current progress:</span>
-                  <span className="font-semibold text-foreground">
-                    {percentage}%
-                  </span>
-                </div>
-                <Progress value={percentage} className="h-2 w-48" />
-                <p className="mt-2 text-center text-xs text-muted-foreground">
-                  We recommend connecting at least 30% of available sources for
-                  meaningful results.
-                </p>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setOpen(false)}
-                >
-                  Connect more sources
-                </Button>
-              </DialogFooter>
-            </>
-          )}
-
-          {!loading && result && !result.lowConfidence && result.estimate && (
-            <>
-              <DialogHeader>
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-                  <DollarSign className="h-7 w-7 text-green-600" />
-                </div>
-                <DialogTitle className="text-center text-2xl">
-                  Up to{" "}
-                  <span className="text-green-600">
-                    {formatCurrency(result.estimate.aggressive)}
-                  </span>
-                </DialogTitle>
-                <DialogDescription className="text-center">
-                  in potential tax savings
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-2">
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="rounded-lg bg-muted p-3">
-                    <p className="text-xs text-muted-foreground">
-                      Conservative
-                    </p>
-                    <p className="text-lg font-bold">
-                      {formatCurrency(result.estimate.conservative)}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-primary/10 p-3">
-                    <p className="text-xs text-muted-foreground">Base</p>
-                    <p className="text-lg font-bold text-primary">
-                      {formatCurrency(result.estimate.base)}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-green-50 p-3">
-                    <p className="text-xs text-muted-foreground">Aggressive</p>
-                    <p className="text-lg font-bold text-green-600">
-                      {formatCurrency(result.estimate.aggressive)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Confidence</span>
-                    <span className="font-medium">
-                      {result.estimate.confidence}%
-                    </span>
-                  </div>
-                  <Progress
-                    value={result.estimate.confidence}
-                    className="h-2"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Top strategies identified:
-                  </p>
-                  <ul className="space-y-1">
-                    {result.estimate.topStrategies.slice(0, 5).map((s) => (
-                      <li
-                        key={s}
-                        className="text-xs text-muted-foreground"
-                      >
-                        &bull; {s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <DialogFooter className="flex-col gap-2 sm:flex-col">
-                <Button className="w-full gap-2" size="lg">
-                  <Phone className="h-4 w-4" />
-                  Contact a Tax Professional
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full"
-                  onClick={() => setOpen(false)}
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </>
-          )}
+            <DialogTitle className="text-center text-xl font-semibold text-foreground">
+              Not enough data yet
+            </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              You&apos;ve only connected {connectedIds.length} data sources ({percentage}%).
+              Connect more sources for a more accurate estimate.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-3 py-4">
+            <div className="relative h-2 w-full max-w-[200px] overflow-hidden rounded-full bg-white/5">
+              <div 
+                className="absolute inset-y-0 left-0 bg-amber-500 transition-all duration-1000 ease-out"
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+            <p className="text-center text-xs text-muted-foreground max-w-[280px]">
+              We recommend connecting at least 30% of available sources for
+              meaningful results.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className="w-full border-white/10 bg-transparent hover:bg-white/5 text-foreground h-12 rounded-xl"
+              onClick={() => setOpen(false)}
+            >
+              Connect more sources
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
