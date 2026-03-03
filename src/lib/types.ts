@@ -52,17 +52,10 @@ export interface SessionPayload {
 export type PowerUpCategory =
   | "financial"
   | "accounting"
-  | "crypto"
-  | "real-estate"
   | "payroll"
   | "r-and-d"
-  | "health-insurance"
-  | "retirement"
-  | "expenses"
-  | "home-office"
-  | "mileage"
-  | "s-corp"
-  | "other";
+  | "property"
+  | "documents";
 
 export interface PowerUp {
   id: string;

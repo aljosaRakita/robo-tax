@@ -6,17 +6,10 @@ import { Button } from "@/components/ui/button";
 import {
   Landmark,
   Calculator,
-  Bitcoin,
-  Home,
   Users,
-  Puzzle,
   FlaskConical,
-  HeartPulse,
-  PiggyBank,
-  Receipt,
-  Laptop,
-  Car,
-  Building2,
+  Home,
+  FileText,
   ChevronLeft,
   ChevronRight,
   Check,
@@ -25,17 +18,10 @@ import {
 const iconMap: Record<string, React.ElementType> = {
   landmark: Landmark,
   calculator: Calculator,
-  bitcoin: Bitcoin,
-  home: Home,
   users: Users,
-  puzzle: Puzzle,
   "flask-conical": FlaskConical,
-  "heart-pulse": HeartPulse,
-  "piggy-bank": PiggyBank,
-  receipt: Receipt,
-  laptop: Laptop,
-  car: Car,
-  "building-2": Building2,
+  home: Home,
+  "file-text": FileText,
 };
 
 interface CategoryStepperProps {
@@ -61,7 +47,7 @@ export function CategoryStepper({
       {/* Step indicators */}
       <div className="flex items-center gap-2 overflow-x-auto pb-4 -mx-6 px-6 sm:mx-0 sm:px-0 sm:gap-1 scrollbar-hide">
         {categories.map((cat, idx) => {
-          const Icon = iconMap[cat.icon] ?? Puzzle;
+          const Icon = iconMap[cat.icon] ?? Landmark;
           const connected = connectedByCategory[cat.id] ?? 0;
           const total = totalByCategory[cat.id] ?? 0;
           const isCurrent = idx === currentStep;
