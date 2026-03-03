@@ -34,8 +34,10 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage =
     pathname === "/login" ||
     pathname === "/register" ||
-    pathname === "/verify";
-  const isProtected = pathname.startsWith("/dashboard");
+    pathname === "/forgot-password";
+  const isVerifyPage = pathname === "/verify";
+  const isResetPage = pathname === "/reset-password";
+  const isProtected = pathname.startsWith("/dashboard") || pathname.startsWith("/results");
 
   // Unauthenticated user trying to access protected route
   if (!user && isProtected) {
@@ -44,7 +46,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Authenticated user trying to access auth pages
+  // Authenticated user trying to access auth pages (but allow /verify and /reset-password)
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";

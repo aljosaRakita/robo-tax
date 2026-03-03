@@ -17,15 +17,15 @@ export function NavBar({ email }: { email: string }) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(59,108,245,0.15)]">
-            <Bot className="h-5 w-5 text-primary" />
+      <div className="mx-auto flex h-14 sm:h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(59,108,245,0.15)]">
+            <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">RoboTax</span>
+          <span className="text-lg sm:text-xl font-bold tracking-tight text-foreground">RoboTax</span>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
             {email}
           </span>

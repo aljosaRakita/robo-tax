@@ -183,8 +183,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-6 pt-10 pb-32">
-      <div className="sticky top-16 z-40 -mx-6 px-6 pb-4 pt-1">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-6 sm:pt-10 pb-28 sm:pb-32">
+      <div className="sticky top-14 sm:top-16 z-40 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-3 sm:pb-4 pt-1 bg-background/80 backdrop-blur-xl">
         <ProgressHeader
           connected={stats.connected}
           total={stats.total}
@@ -193,7 +193,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <Separator className="bg-border" />
 
         <CategoryStepper
@@ -228,11 +228,13 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/80 p-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/80 px-4 sm:px-6 py-3 sm:py-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto max-w-6xl">
           <SavingsDialog
             percentage={stats.percentage}
             connectedIds={connectedIds}
+            categories={categories}
+            connectedByCategory={connectedByCategory}
           />
         </div>
       </div>

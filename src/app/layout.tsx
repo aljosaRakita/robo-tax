@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   title: "RoboTax — Unlock Your Tax Savings",
   description:
     "Connect your financial data sources and discover potential tax savings powered by 435+ strategies.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

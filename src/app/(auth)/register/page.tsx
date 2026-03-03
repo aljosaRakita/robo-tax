@@ -65,6 +65,7 @@ export default function RegisterPage() {
       }
 
       toast.success("Account created! Please verify your email and phone.");
+      sessionStorage.setItem("robotax-verify", JSON.stringify({ email: form.email, phone: form.phone }));
       router.push("/verify");
     } catch {
       toast.error("Something went wrong. Please try again.");

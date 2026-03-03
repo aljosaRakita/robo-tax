@@ -41,7 +41,17 @@ export default function LoginPage() {
       }
 
       toast.success("Welcome back!");
-      router.push("/dashboard");
+
+      // Redirect users with unverified email to verification page
+      if (!data.user?.emailVerified) {
+        sessionStorage.setItem("robotax-verify", JSON.stringify({
+          email: data.user?.email ?? "",
+          phone: data.user?.phone ?? "",
+        }));
+        router.push("/verify");
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     } catch {
       toast.error("Something went wrong. Please try again.");
@@ -56,9 +66,6 @@ export default function LoginPage() {
         <CardTitle className="text-2xl font-semibold tracking-tight">Welcome back</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
           Sign in to your RoboTax account
-          <span className="mt-3 flex items-center rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary border border-primary/20">
-            Demo: demo@robotax.com / demo1234
-          </span>
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -78,7 +85,7 @@ export default function LoginPage() {
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-sm font-medium text-foreground/90">Password</Label>
-              <Link href="#" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
+              <Link href="/forgot-password" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors">
                 Forgot password?
               </Link>
             </div>

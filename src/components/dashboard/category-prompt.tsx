@@ -32,11 +32,11 @@ export function CategoryPrompt({
   const remaining = totalInCategory - connectedInCategory;
 
   return (
-    <div className="animate-slide-up rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="animate-slide-up rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-6">
+      <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Sparkles className="h-5 w-5 text-primary" />
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">
@@ -56,7 +56,7 @@ export function CategoryPrompt({
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              className="h-10 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
               onClick={onDismiss}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -66,7 +66,7 @@ export function CategoryPrompt({
           <Button
             size="sm"
             className={cn(
-              "gap-1.5 rounded-lg shadow-sm",
+              "h-10 gap-1.5 rounded-lg shadow-sm",
               allConnected && "animate-pulse-glow",
             )}
             style={

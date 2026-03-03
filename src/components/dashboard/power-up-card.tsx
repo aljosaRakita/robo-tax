@@ -263,7 +263,7 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 text-xs text-muted-foreground hover:text-destructive px-2"
+                className="h-10 text-xs text-muted-foreground hover:text-destructive px-3"
                 disabled={loading}
                 onClick={handleClick}
               >

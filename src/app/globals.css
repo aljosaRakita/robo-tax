@@ -197,3 +197,11 @@
 @utility glass-panel {
   @apply bg-card/60 backdrop-blur-xl border border-border shadow-2xl;
 }
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

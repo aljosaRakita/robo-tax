@@ -31,7 +31,7 @@ export function ProgressHeader({
         "transition-all duration-300",
         isCompact
           ? "rounded-xl border border-border bg-background/90 backdrop-blur-xl p-3 sm:p-4 shadow-md"
-          : "relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-2xl",
+          : "relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-2xl",
         percentage >= 30 && "animate-pulse-glow"
       )}
       style={percentage >= 30 ? glowStyle : undefined}
@@ -71,44 +71,44 @@ export function ProgressHeader({
         </div>
       ) : (
         <div className="relative space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div
                 className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-xl shadow-inner transition-colors duration-500",
+                  "flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl shadow-inner transition-colors duration-500",
                   isComplete
                     ? "bg-primary/20 text-primary"
                     : "bg-primary/10 text-primary"
                 )}
               >
                 {isComplete ? (
-                  <CheckCircle2 className="h-6 w-6" />
+                  <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
                 ) : (
-                  <ShieldCheck className="h-6 w-6" />
+                  <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6" />
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                <h2 className="text-base sm:text-xl font-semibold tracking-tight text-foreground">
                   Wealth Profile Completeness
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {isComplete
                     ? "All sources connected. Ready for analysis."
                     : "Connect all data sources for maximum tax accuracy."}
                 </p>
               </div>
             </div>
-            <div className="flex flex-col items-end">
-              <span className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+            <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+              <span className="text-2xl sm:text-3xl font-bold tabular-nums tracking-tight text-foreground">
                 {percentage}%
               </span>
-              <span className="text-sm font-medium text-muted-foreground">
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
                 {connected} of {total} sources
               </span>
             </div>
           </div>
 
-          <div className="relative h-3 w-full overflow-hidden rounded-full bg-foreground/10">
+          <div className="relative h-2.5 sm:h-3 w-full overflow-hidden rounded-full bg-foreground/10">
             <div
               className="absolute inset-y-0 left-0 bg-primary transition-all duration-1000 ease-out"
               style={{ width: `${percentage}%` }}

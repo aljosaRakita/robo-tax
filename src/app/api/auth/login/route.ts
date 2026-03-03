@@ -33,14 +33,28 @@ export async function POST(request: Request) {
     .eq("id", user.id)
     .single();
 
+  // Check both our profiles table AND Supabase's email_confirmed_at as fallback.
+  // The link-click flow confirms the email in Supabase but may not update our table.
+  const supabaseEmailConfirmed = !!user.email_confirmed_at;
+  const profileEmailVerified = profile.data?.email_verified ?? false;
+  const emailVerified = profileEmailVerified || supabaseEmailConfirmed;
+
+  // If Supabase says confirmed but our table is stale, sync it
+  if (supabaseEmailConfirmed && !profileEmailVerified) {
+    await supabase
+      .from("profiles")
+      .update({ email_verified: true })
+      .eq("id", user.id);
+  }
+
   return NextResponse.json({
     success: true,
     user: {
       id: user.id,
       email: user.email,
-      phone: profile.data?.phone ?? "",
-      name: profile.data?.name ?? "",
-      emailVerified: profile.data?.email_verified ?? false,
+      phone: profile.data?.phone ?? user.user_metadata?.phone ?? "",
+      name: profile.data?.name ?? user.user_metadata?.name ?? "",
+      emailVerified,
       phoneVerified: profile.data?.phone_verified ?? false,
     },
   });

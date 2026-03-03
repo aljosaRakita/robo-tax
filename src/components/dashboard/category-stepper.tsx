@@ -43,103 +43,89 @@ export function CategoryStepper({
   const isLast = currentStep === categories.length - 1;
 
   return (
-    <div className="space-y-4">
-      {/* Category grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        {categories.map((cat, idx) => {
-          const Icon = iconMap[cat.icon] ?? Landmark;
-          const connected = connectedByCategory[cat.id] ?? 0;
-          const total = totalByCategory[cat.id] ?? 0;
-          const isCurrent = idx === currentStep;
-          const isComplete = connected === total && total > 0;
-          const hasProgress = connected > 0 && !isComplete;
+    <div className="space-y-3 sm:space-y-4">
+      {/* Category tabs - horizontal scroll on mobile, grid on desktop */}
+      <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 sm:grid sm:grid-cols-3 lg:grid-cols-6 sm:overflow-x-visible scrollbar-none">
+          {categories.map((cat, idx) => {
+            const Icon = iconMap[cat.icon] ?? Landmark;
+            const connected = connectedByCategory[cat.id] ?? 0;
+            const total = totalByCategory[cat.id] ?? 0;
+            const isCurrent = idx === currentStep;
+            const isComplete = connected === total && total > 0;
+            const hasProgress = connected > 0 && !isComplete;
 
-          return (
-            <button
-              key={cat.id}
-              onClick={() => onStepChange(idx)}
-              className={cn(
-                "flex items-center gap-2.5 rounded-xl border p-3 text-left text-sm font-medium transition-all duration-200",
-                isCurrent
-                  ? "border-primary bg-primary/10 text-primary shadow-[0_0_12px_rgba(59,108,245,0.15)]"
-                  : isComplete
-                    ? "border-primary/30 bg-primary/5 text-primary"
-                    : hasProgress
-                      ? "border-primary/15 bg-primary/[0.03] text-foreground/80 hover:bg-primary/[0.06]"
-                      : "border-border bg-foreground/[0.02] text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
-              )}
-            >
-              <div
+            return (
+              <button
+                key={cat.id}
+                onClick={() => onStepChange(idx)}
                 className={cn(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                  "flex shrink-0 items-center gap-2 sm:gap-2.5 rounded-xl border px-3 py-2.5 sm:p-3 text-left text-sm font-medium transition-all duration-200",
                   isCurrent
-                    ? "bg-primary/20"
+                    ? "border-primary bg-primary/10 text-primary shadow-[0_0_12px_rgba(59,108,245,0.15)]"
                     : isComplete
-                      ? "bg-primary/10"
+                      ? "border-primary/30 bg-primary/5 text-primary"
                       : hasProgress
-                        ? "bg-primary/10"
-                        : "bg-foreground/5"
+                        ? "border-primary/15 bg-primary/[0.03] text-foreground/80 hover:bg-primary/[0.06]"
+                        : "border-border bg-foreground/[0.02] text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                 )}
               >
-                {isComplete ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Icon className="h-4 w-4" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="block text-xs sm:text-sm whitespace-normal leading-tight mb-0.5">
-                  {cat.label}
-                </span>
-                <span
+                <div
                   className={cn(
-                    "text-[11px] tabular-nums",
-                    isCurrent || isComplete
-                      ? "text-primary/70"
-                      : hasProgress
-                        ? "text-primary/50"
-                        : "text-muted-foreground/70"
+                    "flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg",
+                    isCurrent
+                      ? "bg-primary/20"
+                      : isComplete
+                        ? "bg-primary/10"
+                        : hasProgress
+                          ? "bg-primary/10"
+                          : "bg-foreground/5"
                   )}
                 >
-                  {connected}/{total}
+                  {isComplete ? (
+                    <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  ) : (
+                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  )}
+                </div>
+                <span className="whitespace-nowrap text-xs sm:text-sm sm:whitespace-normal sm:leading-tight">
+                  {cat.label}
                 </span>
-              </div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Current step header */}
-      <div className="flex items-center justify-between rounded-xl border border-border bg-foreground/[0.02] p-4">
-        <div>
-          <h3 className="text-xl font-semibold text-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border bg-foreground/[0.02] p-3 sm:p-4">
+        <div className="min-w-0">
+          <h3 className="text-base sm:text-xl font-semibold text-foreground">
             {categories[currentStep]?.label}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">
             {categories[currentStep]?.description}
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9"
-              disabled={isFirst}
-              onClick={() => onStepChange(currentStep - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9"
-              disabled={isLast}
-              onClick={() => onStepChange(currentStep + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 sm:h-9 sm:w-9"
+            disabled={isFirst}
+            onClick={() => onStepChange(currentStep - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 sm:h-9 sm:w-9"
+            disabled={isLast}
+            onClick={() => onStepChange(currentStep + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </div>
