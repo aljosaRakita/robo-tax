@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     async function fetchPowerUps() {
@@ -31,6 +32,14 @@ export default function DashboardPage() {
       }
     }
     fetchPowerUps();
+  }, []);
+
+  useEffect(() => {
+    function onScroll() {
+      setIsScrolled(window.scrollY > 80);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const handleToggle = useCallback(
@@ -87,11 +96,11 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-6xl space-y-8 p-6 pt-10">
-        <Skeleton className="h-24 w-full rounded-2xl bg-white/5" />
-        <Skeleton className="h-12 w-full rounded-xl bg-white/5" />
+        <Skeleton className="h-24 w-full rounded-2xl bg-foreground/5" />
+        <Skeleton className="h-12 w-full rounded-xl bg-foreground/5" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-44 w-full rounded-2xl bg-white/5" />
+            <Skeleton key={i} className="h-44 w-full rounded-2xl bg-foreground/5" />
           ))}
         </div>
       </div>
@@ -99,34 +108,39 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 p-6 pt-10 pb-32">
-      <ProgressHeader
-        connected={stats.connected}
-        total={stats.total}
-        percentage={stats.percentage}
-      />
-
-      <Separator className="bg-white/5" />
-
-      <CategoryStepper
-        categories={categories}
-        currentStep={currentStep}
-        onStepChange={handleStepChange}
-        connectedByCategory={connectedByCategory}
-        totalByCategory={totalByCategory}
-      />
-
-      {currentCategory && (
-        <PowerUpGrid
-          powerUps={powerUps}
-          category={currentCategory.id}
-          search={search}
-          onSearchChange={setSearch}
-          onToggle={handleToggle}
+    <div className="mx-auto max-w-6xl p-6 pt-10 pb-32">
+      <div className="sticky top-16 z-40 -mx-6 px-6 pb-4 pt-1">
+        <ProgressHeader
+          connected={stats.connected}
+          total={stats.total}
+          percentage={stats.percentage}
+          isCompact={isScrolled}
         />
-      )}
+      </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-background/80 p-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+      <div className="space-y-8">
+        <Separator className="bg-border" />
+
+        <CategoryStepper
+          categories={categories}
+          currentStep={currentStep}
+          onStepChange={handleStepChange}
+          connectedByCategory={connectedByCategory}
+          totalByCategory={totalByCategory}
+        />
+
+        {currentCategory && (
+          <PowerUpGrid
+            powerUps={powerUps}
+            category={currentCategory.id}
+            search={search}
+            onSearchChange={setSearch}
+            onToggle={handleToggle}
+          />
+        )}
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/80 p-4 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto max-w-6xl">
           <SavingsDialog
             percentage={stats.percentage}

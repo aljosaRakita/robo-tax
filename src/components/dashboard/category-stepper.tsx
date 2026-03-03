@@ -65,8 +65,8 @@ export function CategoryStepper({
                     : isComplete
                       ? "border-primary/30 bg-primary/10 text-primary"
                       : isPast
-                        ? "border-white/10 bg-white/5 text-foreground"
-                        : "border-white/5 bg-transparent text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                        ? "border-border bg-foreground/5 text-foreground"
+                        : "border-border/50 bg-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
                 )}
               >
                 {isComplete ? (
@@ -82,7 +82,7 @@ export function CategoryStepper({
                       ? "bg-primary-foreground/20 text-primary-foreground"
                       : isComplete
                         ? "bg-primary/20 text-primary"
-                        : "bg-white/10 text-muted-foreground"
+                        : "bg-foreground/10 text-muted-foreground"
                   )}
                 >
                   {connected}/{total}
@@ -92,7 +92,7 @@ export function CategoryStepper({
                 <div
                   className={cn(
                     "mx-2 h-px w-6 shrink-0 transition-colors duration-300 sm:hidden",
-                    idx < currentStep ? "bg-primary/50" : "bg-white/10"
+                    idx < currentStep ? "bg-primary/50" : "bg-border"
                   )}
                 />
               )}
@@ -102,7 +102,7 @@ export function CategoryStepper({
       </div>
 
       {/* Current step header */}
-      <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] p-4">
+      <div className="flex items-center justify-between rounded-xl border border-border bg-foreground/[0.02] p-4">
         <div>
           <h3 className="text-xl font-semibold text-foreground">
             {categories[currentStep]?.label}
@@ -119,7 +119,7 @@ export function CategoryStepper({
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 border-white/10 bg-transparent hover:bg-white/10"
+              className="h-9 w-9"
               disabled={isFirst}
               onClick={() => onStepChange(currentStep - 1)}
             >
@@ -128,7 +128,7 @@ export function CategoryStepper({
             <Button
               variant="outline"
               size="icon"
-              className="h-9 w-9 border-white/10 bg-transparent hover:bg-white/10"
+              className="h-9 w-9"
               disabled={isLast}
               onClick={() => onStepChange(currentStep + 1)}
             >

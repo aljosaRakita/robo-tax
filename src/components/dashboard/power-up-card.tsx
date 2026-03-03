@@ -45,26 +45,16 @@ const BRAND_COLORS: Record<string, string> = {
   slack: "bg-purple-500/20 text-purple-500",
   asana: "bg-rose-500/20 text-rose-500",
   stripe: "bg-violet-600/20 text-violet-500",
-  // Health & Benefits
   "stride-health": "bg-violet-500/20 text-violet-500",
   "healthcare-gov": "bg-blue-600/20 text-blue-500",
-  // Retirement
-  "fidelity-retirement": "bg-green-700/20 text-green-500",
   vanguard: "bg-red-700/20 text-red-500",
   schwab: "bg-sky-600/20 text-sky-500",
-  // Expenses
-  "quickbooks-expenses": "bg-green-600/20 text-green-500",
   expensify: "bg-green-900/20 text-green-500",
   hurdlr: "bg-emerald-500/20 text-emerald-500",
-  // Home Office (native)
   "home-office-calc": "bg-slate-600/20 text-slate-400",
   "home-office-actual": "bg-slate-700/20 text-slate-400",
-  // Mileage
   mileiq: "bg-sky-500/20 text-sky-500",
   everlance: "bg-emerald-600/20 text-emerald-500",
-  "hurdlr-mi": "bg-emerald-500/20 text-emerald-500",
-  // S-Corp / Entity
-  "gusto-scorp": "bg-orange-500/20 text-orange-500",
   collective: "bg-violet-500/20 text-violet-500",
 };
 
@@ -76,7 +66,7 @@ interface PowerUpCardProps {
 export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
-  const bgColor = BRAND_COLORS[powerUp.id] ?? "bg-white/5 text-muted-foreground";
+  const bgColor = BRAND_COLORS[powerUp.id] ?? "bg-foreground/5 text-muted-foreground";
 
   async function handleClick() {
     setLoading(true);
@@ -93,14 +83,14 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
   return (
     <Card
       className={cn(
-        "flex h-full flex-col transition-all duration-300 border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10",
+        "flex h-full flex-col transition-all duration-300 border-border/50 bg-foreground/[0.02] hover:bg-foreground/[0.04] hover:border-border",
         powerUp.connected && "border-primary/30 bg-primary/[0.02] shadow-[0_0_20px_rgba(16,185,129,0.05)]"
       )}
     >
       <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
         <div
           className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/5",
+            "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/50",
             bgColor,
             (imgError || !powerUp.logoUrl) && "text-lg font-bold"
           )}
@@ -142,7 +132,7 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
           className={cn(
             "mt-auto w-full transition-all duration-300",
             powerUp.connected
-              ? "border-white/10 bg-transparent hover:bg-white/5 hover:text-foreground text-muted-foreground"
+              ? "text-muted-foreground"
               : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
           )}
           disabled={loading}

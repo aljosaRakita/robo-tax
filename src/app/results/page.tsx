@@ -38,7 +38,13 @@ export default function ResultsPage() {
     try {
       const data = JSON.parse(stored) as SavingsEstimate;
       setEstimate(data);
-      setShowConfetti(true);
+
+      // Only show confetti on first visit after a new calculation
+      const seen = localStorage.getItem("robotax-results-seen");
+      if (!seen) {
+        setShowConfetti(true);
+        localStorage.setItem("robotax-results-seen", "1");
+      }
     } catch {
       router.replace("/dashboard");
     }
@@ -56,7 +62,8 @@ export default function ResultsPage() {
         <div className="pointer-events-none fixed inset-0 flex items-start justify-center z-50">
           <Confetti
             particleCount={250}
-            force={0.7}
+            force={1}
+            stageHeight={typeof window !== "undefined" ? window.innerHeight : 1000}
             duration={5000}
             colors={["#059669", "#10b981", "#34d399", "#0d9488", "#14b8a6", "#d97706", "#fbbf24"]}
             particleShape="mix"
@@ -94,40 +101,40 @@ export default function ResultsPage() {
         </div>
 
         <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-lg transition-all hover:bg-card/60">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card/40 backdrop-blur-md p-5 shadow-lg transition-all hover:bg-card/60">
             <PiggyBank className="mb-3 h-5 w-5 text-muted-foreground/70" />
             <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Conservative</p>
             <p className="text-xl font-bold text-foreground/90">{formatCurrency(estimate.conservative)}</p>
           </div>
           <div className="relative flex flex-col items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-md p-5 shadow-[0_0_30px_rgba(16,185,129,0.15)] transition-all hover:bg-emerald-500/15 scale-105 z-10">
-            <div className="absolute -top-3 bg-emerald-500 text-background text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
+            <div className="absolute -top-3 bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
               Base
             </div>
             <DollarSign className="mb-3 h-6 w-6 text-emerald-400" />
-            <p className="text-2xl font-extrabold text-emerald-50">{formatCurrency(estimate.base)}</p>
+            <p className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-50">{formatCurrency(estimate.base)}</p>
           </div>
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md p-5 shadow-lg transition-all hover:bg-card/60">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card/40 backdrop-blur-md p-5 shadow-lg transition-all hover:bg-card/60">
             <TrendingUp className="mb-3 h-5 w-5 text-teal-400/70" />
             <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">Aggressive</p>
-            <p className="text-xl font-bold text-teal-300">{formatCurrency(estimate.aggressive)}</p>
+            <p className="text-xl font-bold text-teal-600 dark:text-teal-300">{formatCurrency(estimate.aggressive)}</p>
           </div>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-white/10 bg-card/30 backdrop-blur-md p-6 shadow-xl">
+        <div className="space-y-4 rounded-2xl border border-border bg-card/30 backdrop-blur-md p-6 shadow-xl">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium text-foreground/80">Analysis Confidence</span>
-            <span className="font-bold text-emerald-400">{estimate.confidence}%</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{estimate.confidence}%</span>
           </div>
-          <Progress 
-            value={estimate.confidence} 
-            className="h-2.5 bg-white/5 [&>div]:bg-gradient-to-r [&>div]:from-emerald-600 [&>div]:to-emerald-400" 
+          <Progress
+            value={estimate.confidence}
+            className="h-2.5 bg-foreground/5 [&>div]:bg-gradient-to-r [&>div]:from-emerald-600 [&>div]:to-emerald-400"
           />
           <p className="text-xs text-muted-foreground leading-relaxed">
             Based on <strong className="text-foreground/80 font-semibold">{estimate.connectedSources}</strong> of <strong className="text-foreground/80 font-semibold">{estimate.totalSources}</strong> data sources connected ({estimate.percentage}%)
           </p>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-white/10 bg-card/30 backdrop-blur-md p-6 shadow-xl">
+        <div className="space-y-4 rounded-2xl border border-border bg-card/30 backdrop-blur-md p-6 shadow-xl">
           <p className="text-sm font-semibold uppercase tracking-wider text-foreground/80">Top Strategies Identified</p>
           <ul className="space-y-3">
             {estimate.topStrategies.slice(0, 7).map((s, i) => (
@@ -146,8 +153,8 @@ export default function ResultsPage() {
         </div>
 
         <div className="space-y-4 pt-4">
-          <Button 
-            className="w-full gap-2 h-14 text-base font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all border-0 rounded-xl" 
+          <Button
+            className="w-full gap-2 h-14 text-base font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all border-0 rounded-xl"
             size="lg"
           >
             <Phone className="h-5 w-5" />
@@ -155,7 +162,7 @@ export default function ResultsPage() {
           </Button>
           <Button
             variant="outline"
-            className="w-full gap-2 h-12 border-white/10 bg-transparent hover:bg-white/5 text-muted-foreground hover:text-foreground transition-all rounded-xl"
+            className="w-full gap-2 h-12 rounded-xl"
             onClick={() => router.push("/dashboard")}
           >
             <ArrowLeft className="h-4 w-4" />

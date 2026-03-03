@@ -38,14 +38,14 @@ export function PowerUpGrid({
         <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search power-ups..."
-          className="pl-10 bg-white/[0.02] border-white/10 focus-visible:ring-primary/50 h-11 rounded-xl"
+          className="pl-10 bg-foreground/[0.02] border-border h-11 rounded-xl"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
+        <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-border bg-foreground/[0.01]">
           <p className="text-sm text-muted-foreground">
             {search
               ? `No power-ups found matching "${search}"`

@@ -178,5 +178,5 @@
 }
 
 @utility glass-panel {
-  @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+  @apply bg-card/60 backdrop-blur-xl border border-border shadow-2xl;
 }
