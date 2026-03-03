@@ -36,7 +36,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     function onScroll() {
-      setIsScrolled(window.scrollY > 80);
+      const y = window.scrollY;
+      // Hysteresis: compact at 150px, full only when back near top
+      if (y > 150) setIsScrolled(true);
+      else if (y < 20) setIsScrolled(false);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);

@@ -34,7 +34,7 @@ export function PowerUpGrid({
 
   return (
     <div className="space-y-6">
-      <div className="relative max-w-md">
+      <div className="relative">
         <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search power-ups..."
