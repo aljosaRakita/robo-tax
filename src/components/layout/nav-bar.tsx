@@ -19,7 +19,7 @@ export function NavBar({ email }: { email: string }) {
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 shadow-[0_0_15px_rgba(59,108,245,0.15)]">
             <Bot className="h-5 w-5 text-primary" />
           </div>
           <span className="text-xl font-bold tracking-tight text-foreground">RoboTax</span>

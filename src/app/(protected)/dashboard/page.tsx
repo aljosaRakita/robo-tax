@@ -7,6 +7,7 @@ import { ProgressHeader } from "@/components/dashboard/progress-header";
 import { CategoryStepper } from "@/components/dashboard/category-stepper";
 import { PowerUpGrid } from "@/components/dashboard/power-up-grid";
 import { SavingsDialog } from "@/components/dashboard/savings-dialog";
+import { CategoryPrompt } from "@/components/dashboard/category-prompt";
 import type {
   PowerUp,
   CategoryInfo,
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [dismissedPrompts, setDismissedPrompts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchPowerUps() {
@@ -94,6 +96,12 @@ export default function DashboardPage() {
   function handleStepChange(step: number) {
     setCurrentStep(step);
     setSearch("");
+    // Reset dismissed prompt when navigating to a new category
+    setDismissedPrompts((prev) => {
+      const next = new Set(prev);
+      next.delete(categories[step]?.id ?? "");
+      return next;
+    });
   }
 
   if (loading) {
@@ -139,6 +147,19 @@ export default function DashboardPage() {
             search={search}
             onSearchChange={setSearch}
             onToggle={handleToggle}
+          />
+        )}
+
+        {currentCategory && currentStep < categories.length - 1 && (
+          <CategoryPrompt
+            connectedInCategory={connectedByCategory[currentCategory.id] ?? 0}
+            totalInCategory={totalByCategory[currentCategory.id] ?? 0}
+            nextCategoryLabel={categories[currentStep + 1]?.label}
+            onContinue={() => handleStepChange(currentStep + 1)}
+            dismissed={dismissedPrompts.has(currentCategory.id)}
+            onDismiss={() =>
+              setDismissedPrompts((prev) => new Set(prev).add(currentCategory.id))
+            }
           />
         )}
       </div>

@@ -37,6 +37,15 @@ export function SavingsDialog({ percentage, connectedIds }: SavingsDialogProps) 
 
   const isReady = percentage >= 30;
 
+  // Progressive glow intensity based on connection percentage
+  const glowIntensity = Math.min(percentage / 100, 1);
+  const buttonGlowStyle = isReady && !loading
+    ? {
+        "--glow-size": `${6 + glowIntensity * 14}px`,
+        "--glow-opacity": `${glowIntensity * 0.6}`,
+      } as React.CSSProperties
+    : undefined;
+
   async function handleCalculate() {
     setLoading(true);
 
@@ -80,12 +89,12 @@ export function SavingsDialog({ percentage, connectedIds }: SavingsDialogProps) 
               : "Connect at least 30% of sources to unlock savings estimate."}
           </span>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-3 w-full sm:w-auto min-w-0">
           {hasResults && (
             <Button
               variant="outline"
               size="lg"
-              className="gap-2 h-14 px-6 rounded-xl"
+              className="shrink-0 gap-2 h-14 px-4 sm:px-6 rounded-xl"
               onClick={() => router.push("/results")}
             >
               <Eye className="h-5 w-5" />
@@ -97,18 +106,24 @@ export function SavingsDialog({ percentage, connectedIds }: SavingsDialogProps) 
             size="lg"
             disabled={loading}
             className={cn(
-              "flex-1 sm:flex-initial gap-3 text-base font-semibold transition-all duration-500 h-14 px-8 rounded-xl",
+              "flex-1 sm:flex-initial gap-2 sm:gap-3 text-sm sm:text-base font-semibold transition-all duration-500 h-14 px-4 sm:px-8 rounded-xl truncate",
               isReady && !loading
-                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] animate-glow"
+                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md animate-pulse-glow"
                 : "bg-foreground/5 text-muted-foreground hover:bg-foreground/10"
             )}
+            style={buttonGlowStyle}
           >
             {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
             ) : (
-              <Calculator className="h-5 w-5" />
+              <Calculator className="h-5 w-5 shrink-0" />
             )}
-            {loading ? "Analyzing..." : "Calculate Savings"}
+            <span className="sm:hidden">
+              {loading ? "Analyzing..." : connectedIds.length > 0 ? `Calculate (${connectedIds.length})` : "Calculate"}
+            </span>
+            <span className="hidden sm:inline">
+              {loading ? "Analyzing..." : connectedIds.length > 0 ? `Calculate Savings (${connectedIds.length} sources)` : "Calculate Savings"}
+            </span>
           </Button>
         </div>
       </div>

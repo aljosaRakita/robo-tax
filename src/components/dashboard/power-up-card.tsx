@@ -84,7 +84,7 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
     <Card
       className={cn(
         "flex h-full flex-col transition-all duration-300 border-border/50 bg-foreground/[0.02] hover:bg-foreground/[0.04] hover:border-border",
-        powerUp.connected && "border-primary/30 bg-primary/[0.02] shadow-[0_0_20px_rgba(16,185,129,0.05)]"
+        powerUp.connected && "opacity-75 bg-foreground/[0.01] border-transparent hover:border-border/50"
       )}
     >
       <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
@@ -124,27 +124,51 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
         )}
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-between gap-5">
-        <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
-          {powerUp.description}
-        </p>
-        <Button
-          variant={powerUp.connected ? "outline" : "default"}
-          className={cn(
-            "mt-auto w-full transition-all duration-300",
-            powerUp.connected
-              ? "text-muted-foreground"
-              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-          )}
-          disabled={loading}
-          onClick={handleClick}
-        >
-          {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : powerUp.connected ? null : (
-            <Plug className="mr-2 h-4 w-4" />
-          )}
-          {powerUp.connected ? "Disconnect" : "Connect"}
-        </Button>
+        {powerUp.connected ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">
+              Account Synced
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Found recent transactions • Last updated: Just now
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
+            {powerUp.description}
+          </p>
+        )}
+
+        {powerUp.connected ? (
+          <div className="mt-auto flex items-center justify-between">
+            <span className="text-xs text-muted-foreground opacity-70">
+              Active Connection
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs text-muted-foreground hover:text-destructive px-2"
+              disabled={loading}
+              onClick={handleClick}
+            >
+              {loading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+              Disconnect
+            </Button>
+          </div>
+        ) : (
+          <Button
+            className="mt-auto w-full transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={loading}
+            onClick={handleClick}
+          >
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Plug className="mr-2 h-4 w-4" />
+            )}
+            Connect
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

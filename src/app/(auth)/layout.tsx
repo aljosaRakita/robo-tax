@@ -12,7 +12,7 @@ export default function AuthLayout({
       
       <div className="relative z-10 flex w-full max-w-[440px] flex-col items-center animate-fade-in">
         <div className="mb-10 flex flex-col items-center text-center animate-slide-up">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 shadow-[0_0_30px_rgba(59,108,245,0.15)]">
             <Bot className="h-7 w-7 text-primary" />
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">

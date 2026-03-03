@@ -50,8 +50,8 @@ on conflict (id) do update set logo_url = excluded.logo_url, description = exclu
 -- ── Payroll & Entity (7) — payroll, S-Corp, health benefits ─
 
 insert into public.power_ups (id, name, description, category_id, logo_url, savings_weight) values
-  ('adp',            'ADP',             'W-2 data, wages, FICA, contractor payments',                      'payroll', 'https://cdn.simpleicons.org/adp/D0271D',                              5),
-  ('gusto',          'Gusto',           'Payroll, employee classifications, S-Corp payroll, 1099s',        'payroll', 'https://cdn.simpleicons.org/gusto/F45D22',                            4),
+  ('gusto',          'Gusto',           'Payroll, employee classifications, S-Corp payroll, 1099s',        'payroll', 'https://cdn.simpleicons.org/gusto/F45D22',                            5),
+  ('adp',            'ADP',             'W-2 data, wages, FICA, contractor payments',                      'payroll', 'https://cdn.simpleicons.org/adp/D0271D',                              4),
   ('paychex',        'Paychex',         'Payroll summaries and tax deposits',                              'payroll', 'https://cdn.simpleicons.org/paychex/004B87',                          3),
   ('rippling',       'Rippling',        'Unified payroll and HR platform',                                 'payroll', 'https://www.google.com/s2/favicons?sz=128&domain=rippling.com',        3),
   ('collective',     'Collective',      'S-Corp formation, bookkeeping, and tax filing for solopreneurs',  'payroll', 'https://www.google.com/s2/favicons?sz=128&domain=collective.com',      3),

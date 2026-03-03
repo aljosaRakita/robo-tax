@@ -96,12 +96,12 @@ export default function VerifyPage() {
                 onChange={(e) =>
                   setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
-                className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
+                className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
               />
               <Button
                 onClick={() => verify("email")}
                 disabled={loading === "email"}
-                className="shrink-0 h-11 px-6 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all duration-300"
+                className="shrink-0 h-11 px-6 shadow-md transition-all duration-300"
               >
                 {loading === "email" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -130,12 +130,12 @@ export default function VerifyPage() {
                 onChange={(e) =>
                   setPhoneCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
-                className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
+                className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
               />
               <Button
                 onClick={() => verify("phone")}
                 disabled={loading === "phone"}
-                className="shrink-0 h-11 px-6 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all duration-300"
+                className="shrink-0 h-11 px-6 shadow-md transition-all duration-300"
               >
                 {loading === "phone" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -149,7 +149,7 @@ export default function VerifyPage() {
       <CardFooter className="pt-2">
         {emailVerified && phoneVerified && (
           <Button
-            className="w-full h-11 text-base font-medium shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] transition-all duration-300 animate-slide-up"
+            className="w-full h-11 text-base font-medium shadow-md transition-all duration-300 animate-slide-up"
             onClick={() => {
               router.push("/dashboard");
               router.refresh();

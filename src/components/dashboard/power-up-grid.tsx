@@ -37,7 +37,7 @@ export function PowerUpGrid({
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search power-ups..."
+          placeholder="Search institutions, brokerages, or CPAs..."
           className="pl-10 bg-foreground/[0.02] border-border h-11 rounded-xl"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}

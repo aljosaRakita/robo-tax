@@ -19,10 +19,12 @@ export async function GET() {
     .select("id, label, icon, description")
     .order("sort_order");
 
-  // Fetch enabled power-ups
+  // Fetch enabled power-ups, highest-weight first within each category
   const { data: powerUps } = await supabase
     .from("power_ups")
-    .select("id, name, description, category_id, logo_url, savings_weight, is_native");
+    .select("id, name, description, category_id, logo_url, savings_weight, is_native")
+    .order("savings_weight", { ascending: false })
+    .order("name");
 
   // Fetch user's connections
   const { data: connections } = await supabase

@@ -56,7 +56,7 @@
   --card-foreground: oklch(0.14 0.01 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.14 0.01 260);
-  --primary: oklch(0.55 0.18 150); /* Emerald */
+  --primary: oklch(0.55 0.15 250); /* Institutional Blue */
   --primary-foreground: oklch(0.98 0 0);
   --secondary: oklch(0.95 0.005 260);
   --secondary-foreground: oklch(0.14 0.01 260);
@@ -67,55 +67,55 @@
   --destructive: oklch(0.6 0.2 25);
   --border: oklch(0.9 0.01 260);
   --input: oklch(0.9 0.01 260);
-  --ring: oklch(0.55 0.18 150);
-  --chart-1: oklch(0.55 0.18 150);
+  --ring: oklch(0.55 0.15 250);
+  --chart-1: oklch(0.55 0.15 250);
   --chart-2: oklch(0.6 0.15 200);
   --chart-3: oklch(0.7 0.15 80);
   --chart-4: oklch(0.65 0.15 240);
   --chart-5: oklch(0.6 0.15 300);
   --sidebar: oklch(0.98 0.005 260);
   --sidebar-foreground: oklch(0.14 0.01 260);
-  --sidebar-primary: oklch(0.55 0.18 150);
+  --sidebar-primary: oklch(0.55 0.15 250);
   --sidebar-primary-foreground: oklch(0.98 0 0);
   --sidebar-accent: oklch(0.95 0.005 260);
   --sidebar-accent-foreground: oklch(0.14 0.01 260);
   --sidebar-border: oklch(0.9 0.01 260);
-  --sidebar-ring: oklch(0.55 0.18 150);
+  --sidebar-ring: oklch(0.55 0.15 250);
 }
 
 .dark {
-  /* Premium Dark Fintech Theme - Deep cool blacks and emerald */
-  --background: oklch(0.14 0.01 260);
+  /* Premium Dark Fintech Theme - Deep cool blacks and slate blue */
+  --background: oklch(0.16 0.02 260);
   --foreground: oklch(0.98 0 0);
-  --card: oklch(0.18 0.01 260);
+  --card: oklch(0.19 0.02 260);
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.18 0.01 260);
+  --popover: oklch(0.19 0.02 260);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.65 0.18 150); /* Vibrant Emerald */
-  --primary-foreground: oklch(0.14 0.01 260);
-  --secondary: oklch(0.22 0.01 260);
+  --primary: oklch(0.58 0.15 250); /* Institutional Blue */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.22 0.02 260);
   --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.22 0.01 260);
-  --muted-foreground: oklch(0.65 0.01 260);
-  --accent: oklch(0.22 0.01 260);
+  --muted: oklch(0.22 0.02 260);
+  --muted-foreground: oklch(0.65 0.02 260);
+  --accent: oklch(0.22 0.02 260);
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.6 0.2 25);
   --border: oklch(0.98 0 0 / 0.08);
   --input: oklch(0.98 0 0 / 0.1);
-  --ring: oklch(0.65 0.18 150);
-  --chart-1: oklch(0.65 0.18 150);
+  --ring: oklch(0.58 0.15 250);
+  --chart-1: oklch(0.58 0.15 250);
   --chart-2: oklch(0.7 0.15 200);
   --chart-3: oklch(0.8 0.15 80);
   --chart-4: oklch(0.75 0.15 240);
   --chart-5: oklch(0.7 0.15 300);
-  --sidebar: oklch(0.16 0.01 260);
+  --sidebar: oklch(0.16 0.02 260);
   --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.65 0.18 150);
-  --sidebar-primary-foreground: oklch(0.14 0.01 260);
-  --sidebar-accent: oklch(0.22 0.01 260);
+  --sidebar-primary: oklch(0.58 0.15 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.22 0.02 260);
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.98 0 0 / 0.08);
-  --sidebar-ring: oklch(0.65 0.18 150);
+  --sidebar-ring: oklch(0.58 0.15 250);
 }
 
 @layer base {
@@ -129,10 +129,10 @@
 
 @keyframes glow {
   0%, 100% {
-    box-shadow: 0 0 8px 2px oklch(0.65 0.18 150 / 0.8), 0 0 20px 4px oklch(0.65 0.18 150 / 0.4);
+    box-shadow: 0 0 4px 1px oklch(0.58 0.15 250 / 0.4), 0 0 10px 2px oklch(0.58 0.15 250 / 0.2);
   }
   50% {
-    box-shadow: 0 0 16px 4px oklch(0.65 0.18 150 / 0.9), 0 0 32px 8px oklch(0.65 0.18 150 / 0.5);
+    box-shadow: 0 0 8px 2px oklch(0.58 0.15 250 / 0.5), 0 0 16px 4px oklch(0.58 0.15 250 / 0.3);
   }
 }
 
@@ -159,6 +159,23 @@
 
 @utility animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 calc(var(--glow-size, 4px)) 1px oklch(0.58 0.15 250 / var(--glow-opacity, 0)),
+      0 0 calc(var(--glow-size, 4px) * 2.5) 2px oklch(0.58 0.15 250 / calc(var(--glow-opacity, 0) * 0.5));
+  }
+  50% {
+    box-shadow:
+      0 0 calc(var(--glow-size, 4px) * 2) 2px oklch(0.58 0.15 250 / calc(var(--glow-opacity, 0) * 1.25)),
+      0 0 calc(var(--glow-size, 4px) * 4) 4px oklch(0.58 0.15 250 / calc(var(--glow-opacity, 0) * 0.75));
+  }
+}
+
+@utility animate-pulse-glow {
+  animation: pulse-glow 2.5s ease-in-out infinite;
 }
 
 @utility animate-shimmer {

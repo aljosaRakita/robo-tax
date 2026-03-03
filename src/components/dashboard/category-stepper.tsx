@@ -52,6 +52,7 @@ export function CategoryStepper({
           const total = totalByCategory[cat.id] ?? 0;
           const isCurrent = idx === currentStep;
           const isComplete = connected === total && total > 0;
+          const hasProgress = connected > 0 && !isComplete;
 
           return (
             <button
@@ -60,10 +61,12 @@ export function CategoryStepper({
               className={cn(
                 "flex items-center gap-2.5 rounded-xl border p-3 text-left text-sm font-medium transition-all duration-200",
                 isCurrent
-                  ? "border-primary bg-primary/10 text-primary shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+                  ? "border-primary bg-primary/10 text-primary shadow-[0_0_12px_rgba(59,108,245,0.15)]"
                   : isComplete
                     ? "border-primary/30 bg-primary/5 text-primary"
-                    : "border-border bg-foreground/[0.02] text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
+                    : hasProgress
+                      ? "border-primary/15 bg-primary/[0.03] text-foreground/80 hover:bg-primary/[0.06]"
+                      : "border-border bg-foreground/[0.02] text-muted-foreground hover:bg-foreground/5 hover:text-foreground"
               )}
             >
               <div
@@ -73,7 +76,9 @@ export function CategoryStepper({
                     ? "bg-primary/20"
                     : isComplete
                       ? "bg-primary/10"
-                      : "bg-foreground/5"
+                      : hasProgress
+                        ? "bg-primary/10"
+                        : "bg-foreground/5"
                 )}
               >
                 {isComplete ? (
@@ -83,7 +88,7 @@ export function CategoryStepper({
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <span className="block truncate text-xs sm:text-sm">
+                <span className="block text-xs sm:text-sm whitespace-normal leading-tight mb-0.5">
                   {cat.label}
                 </span>
                 <span
@@ -91,7 +96,9 @@ export function CategoryStepper({
                     "text-[11px] tabular-nums",
                     isCurrent || isComplete
                       ? "text-primary/70"
-                      : "text-muted-foreground/70"
+                      : hasProgress
+                        ? "text-primary/50"
+                        : "text-muted-foreground/70"
                   )}
                 >
                   {connected}/{total}
@@ -113,9 +120,6 @@ export function CategoryStepper({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="hidden sm:inline-block text-sm font-medium text-muted-foreground">
-            Step {currentStep + 1} of {categories.length}
-          </span>
           <div className="flex gap-2">
             <Button
               variant="outline"

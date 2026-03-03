@@ -91,7 +91,7 @@ export default function RegisterPage() {
               required
               value={form.name}
               onChange={(e) => update("name", e.target.value)}
-              className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
+              className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
             />
           </div>
           <div className="space-y-2.5">
@@ -103,7 +103,7 @@ export default function RegisterPage() {
               required
               value={form.email}
               onChange={(e) => update("email", e.target.value)}
-              className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
+              className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
             />
           </div>
           <div className="space-y-2.5">
@@ -115,7 +115,7 @@ export default function RegisterPage() {
               required
               value={form.phone}
               onChange={(e) => update("phone", e.target.value)}
-              className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
+              className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
             />
           </div>
           <div className="space-y-2.5">
@@ -127,7 +127,7 @@ export default function RegisterPage() {
               required
               value={form.password}
               onChange={(e) => update("password", e.target.value)}
-              className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
+              className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
             />
           </div>
           <div className="space-y-2.5">
@@ -139,14 +139,14 @@ export default function RegisterPage() {
               required
               value={form.confirmPassword}
               onChange={(e) => update("confirmPassword", e.target.value)}
-              className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
+              className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
             />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 pt-6">
           <Button 
             type="submit" 
-            className="w-full h-11 text-base font-medium shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] transition-all duration-300" 
+            className="w-full h-11 text-base font-medium shadow-md transition-all duration-300" 
             disabled={loading}
           >
             {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
