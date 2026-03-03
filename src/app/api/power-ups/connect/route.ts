@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requiresPlaidLink, getProviderForPowerUp } from "@/lib/integrations/index";
+import { createLinkToken } from "@/lib/integrations/plaid";
+import { Products } from "plaid";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -34,9 +37,49 @@ export async function POST(request: Request) {
   }
 
   if (action === "connect") {
+    // Check if this power-up needs Plaid Link
+    if (requiresPlaidLink(powerUpId)) {
+      try {
+        // Determine which Plaid products to request
+        const provider = getProviderForPowerUp(powerUpId);
+        const products: Products[] = [Products.Transactions];
+
+        // Add investments for brokerage/investment power-ups
+        const investmentPowerUps = [
+          "fidelity", "robinhood", "vanguard", "schwab",
+          "coinbase", "kraken", "gemini", "binance-us",
+        ];
+        if (investmentPowerUps.includes(powerUpId)) {
+          products.push(Products.Investments);
+        }
+
+        const linkToken = await createLinkToken(user.id, products);
+
+        return NextResponse.json({
+          success: true,
+          requiresPlaid: true,
+          linkToken,
+          provider: provider?.id ?? "plaid",
+        });
+      } catch (err) {
+        console.error("[connect] Plaid link token error:", err);
+        return NextResponse.json(
+          { error: "Failed to create Plaid link token" },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Non-Plaid connect: simple toggle
+    const provider = getProviderForPowerUp(powerUpId);
     const { error } = await supabase
       .from("user_connections")
-      .upsert({ user_id: user.id, power_up_id: powerUpId });
+      .upsert({
+        user_id: user.id,
+        power_up_id: powerUpId,
+        provider: provider?.id ?? null,
+        integration_status: provider ? "pending" : "connected",
+      });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

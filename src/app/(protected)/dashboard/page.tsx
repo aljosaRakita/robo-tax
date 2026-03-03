@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { ProgressHeader } from "@/components/dashboard/progress-header";
@@ -11,9 +12,11 @@ import { CategoryPrompt } from "@/components/dashboard/category-prompt";
 import type {
   PowerUp,
   CategoryInfo,
+  IntegrationStatus,
 } from "@/lib/types";
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
   const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -22,24 +25,67 @@ export default function DashboardPage() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [dismissedPrompts, setDismissedPrompts] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    async function fetchPowerUps() {
-      try {
-        const res = await fetch("/api/power-ups");
-        const data = await res.json();
-        setPowerUps(data.powerUps);
-        setCategories(data.categories);
-      } finally {
-        setLoading(false);
+  // Fetch power-ups and integration statuses
+  const fetchPowerUps = useCallback(async () => {
+    try {
+      const [puRes, statusRes] = await Promise.all([
+        fetch("/api/power-ups"),
+        fetch("/api/integrations/status"),
+      ]);
+      const puData = await puRes.json();
+      const statusData = await statusRes.json().catch(() => ({ statuses: [] }));
+
+      // Build a status lookup from integration statuses
+      const statusMap = new Map<
+        string,
+        { integrationStatus: IntegrationStatus; lastSyncedAt: string | null; provider: string | null }
+      >();
+      if (statusData.statuses) {
+        for (const s of statusData.statuses) {
+          statusMap.set(s.powerUpId, {
+            integrationStatus: s.integrationStatus,
+            lastSyncedAt: s.lastSyncedAt,
+            provider: s.provider,
+          });
+        }
       }
+
+      // Enrich power-ups with integration status
+      const enriched: PowerUp[] = (puData.powerUps ?? []).map((p: PowerUp) => {
+        const st = statusMap.get(p.id);
+        return {
+          ...p,
+          provider: st?.provider ?? p.provider,
+          integrationStatus: st?.integrationStatus as IntegrationStatus | undefined,
+          lastSyncedAt: st?.lastSyncedAt,
+        };
+      });
+
+      setPowerUps(enriched);
+      setCategories(puData.categories);
+    } finally {
+      setLoading(false);
     }
-    fetchPowerUps();
   }, []);
+
+  useEffect(() => {
+    fetchPowerUps();
+  }, [fetchPowerUps]);
+
+  // Handle post-Plaid redirect URL params
+  useEffect(() => {
+    const plaidSuccess = searchParams.get("plaid_success");
+    if (plaidSuccess) {
+      fetchPowerUps();
+      const url = new URL(window.location.href);
+      url.searchParams.delete("plaid_success");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [searchParams, fetchPowerUps]);
 
   useEffect(() => {
     function onScroll() {
       const y = window.scrollY;
-      // Hysteresis: compact at 150px, full only when back near top
       if (y > 150) setIsScrolled(true);
       else if (y < 20) setIsScrolled(false);
     }
@@ -48,20 +94,39 @@ export default function DashboardPage() {
   }, []);
 
   const handleToggle = useCallback(
-    async (id: string, action: "connect" | "disconnect") => {
+    async (id: string, action: "connect" | "disconnect"): Promise<{
+      requiresPlaid?: boolean;
+      linkToken?: string;
+    } | void> => {
+      // Optimistic update
       setPowerUps((prev) =>
         prev.map((p) =>
           p.id === id ? { ...p, connected: action === "connect" } : p
         )
       );
 
-      await fetch("/api/power-ups/connect", {
+      const res = await fetch("/api/power-ups/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ powerUpId: id, action }),
       });
+
+      const data = await res.json();
+
+      // If server says this needs Plaid, revert optimistic update and return link token
+      if (data.requiresPlaid && data.linkToken) {
+        setPowerUps((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, connected: false } : p))
+        );
+        return { requiresPlaid: true, linkToken: data.linkToken };
+      }
+
+      // After successful connect, refetch statuses after a brief delay for background sync
+      if (action === "connect") {
+        setTimeout(() => fetchPowerUps(), 1500);
+      }
     },
-    []
+    [fetchPowerUps]
   );
 
   const connectedIds = useMemo(
@@ -96,7 +161,6 @@ export default function DashboardPage() {
   function handleStepChange(step: number) {
     setCurrentStep(step);
     setSearch("");
-    // Reset dismissed prompt when navigating to a new category
     setDismissedPrompts((prev) => {
       const next = new Set(prev);
       next.delete(categories[step]?.id ?? "");

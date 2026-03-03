@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import type { PowerUpCategory, PowerUpsResponse } from "@/lib/types";
+import type { PowerUpCategory, PowerUpsResponse, IntegrationStatus } from "@/lib/types";
 
 export async function GET() {
   const supabase = await createClient();
@@ -26,29 +26,35 @@ export async function GET() {
     .order("savings_weight", { ascending: false })
     .order("name");
 
-  // Fetch user's connections
+  // Fetch user's connections (including integration fields)
   const { data: connections } = await supabase
     .from("user_connections")
-    .select("power_up_id")
+    .select("power_up_id, provider, integration_status, last_synced_at")
     .eq("user_id", user.id);
 
-  const connectedSet = new Set(
-    (connections ?? []).map((c) => c.power_up_id)
+  const connectionMap = new Map(
+    (connections ?? []).map((c) => [c.power_up_id, c])
   );
 
-  const enriched = (powerUps ?? []).map((p) => ({
-    id: p.id,
-    name: p.name,
-    description: p.description,
-    category: p.category_id as PowerUpCategory,
-    logoUrl: p.logo_url,
-    savingsWeight: p.savings_weight,
-    connected: connectedSet.has(p.id),
-    isNative: p.is_native,
-  }));
+  const enriched = (powerUps ?? []).map((p) => {
+    const conn = connectionMap.get(p.id);
+    return {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      category: p.category_id as PowerUpCategory,
+      logoUrl: p.logo_url,
+      savingsWeight: p.savings_weight,
+      connected: !!conn,
+      isNative: p.is_native,
+      provider: conn?.provider ?? null,
+      integrationStatus: (conn?.integration_status as IntegrationStatus) ?? undefined,
+      lastSyncedAt: conn?.last_synced_at ?? undefined,
+    };
+  });
 
   const total = enriched.length;
-  const connectedCount = connectedSet.size;
+  const connectedCount = enriched.filter((p) => p.connected).length;
 
   const response: PowerUpsResponse = {
     powerUps: enriched,

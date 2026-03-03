@@ -1,4 +1,9 @@
-import type { SavingsEstimate } from "@/lib/types";
+import type { SavingsEstimate, StrategyMatch } from "@/lib/types";
+import { runStrategyEngine } from "@/lib/strategy-engine";
+import { createAdminClient } from "@/lib/supabase/admin";
+import type { Database } from "@/lib/supabase/types";
+
+type StrategyMatchRow = Database["public"]["Tables"]["user_strategy_matches"]["Row"];
 
 interface PowerUpInput {
   id: string;
@@ -28,16 +33,13 @@ const STRATEGY_POOL = [
   "State & Local Tax (SALT) Workarounds",
 ];
 
+// ---- Randomized fallback (original V0 logic) ----
+
 /**
  * Calculates savings estimate based on which power-ups are connected.
- *
- * Logic:
- *  - Base: $5,000 minimum
- *  - Each connected source adds $3,000–$8,000 × its savingsWeight
- *  - Confidence scales linearly with connected percentage
- *  - Returns conservative / base / aggressive ranges
+ * Used as a fallback when no integration data exists.
  */
-export function calculateSavings(
+export function calculateSavingsFallback(
   allPowerUps: PowerUpInput[],
   connectedIds: Set<string>
 ): SavingsEstimate {
@@ -67,5 +69,101 @@ export function calculateSavings(
     totalSources: total,
     percentage,
     topStrategies,
+  };
+}
+
+// ---- Data-driven calculation via strategy engine ----
+
+/**
+ * Run the strategy engine and build a SavingsEstimate from real data.
+ * Falls back to randomized calc if the engine produces no matches.
+ */
+export async function calculateSavings(
+  userId: string,
+  allPowerUps: PowerUpInput[],
+  connectedIds: Set<string>
+): Promise<SavingsEstimate> {
+  // Check if user has any integration data
+  const admin = createAdminClient();
+  const { count } = await admin
+    .from("integration_data")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("is_stale", false);
+
+  if (!count || count === 0) {
+    return calculateSavingsFallback(allPowerUps, connectedIds);
+  }
+
+  // Run the strategy engine
+  const engineResults = await runStrategyEngine(userId);
+
+  if (engineResults.length === 0) {
+    return calculateSavingsFallback(allPowerUps, connectedIds);
+  }
+
+  // Fetch strategy titles for display
+  const { data: strategies } = await admin
+    .from("tax_strategies")
+    .select("id, title");
+
+  const titleMap = new Map(
+    (strategies ?? []).map((s) => [s.id, s.title])
+  );
+
+  // Also fetch persisted matches to include status
+  const { data: rawMatchRows } = await admin
+    .from("user_strategy_matches")
+    .select("*")
+    .eq("user_id", userId);
+
+  const matchRows = (rawMatchRows ?? []) as StrategyMatchRow[];
+  const matchMap = new Map(matchRows.map((m) => [m.strategy_id, m]));
+
+  // Build strategy matches
+  const strategyMatches: StrategyMatch[] = engineResults.map((r) => {
+    const persisted = matchMap.get(r.strategyId);
+    return {
+      strategyId: r.strategyId,
+      strategyTitle: titleMap.get(r.strategyId) ?? r.strategyId,
+      estimatedLow: r.estimatedLow,
+      estimatedBase: r.estimatedBase,
+      estimatedHigh: r.estimatedHigh,
+      confidence: r.confidence,
+      reasoning: r.reasoning,
+      evidence: r.evidence,
+      status: (persisted?.status as StrategyMatch["status"]) ?? "identified",
+    };
+  });
+
+  // Sort by estimated savings descending
+  strategyMatches.sort((a, b) => b.estimatedBase - a.estimatedBase);
+
+  // Aggregate totals
+  const totalBase = strategyMatches.reduce((s, m) => s + m.estimatedBase, 0);
+  const totalLow = strategyMatches.reduce((s, m) => s + m.estimatedLow, 0);
+  const totalHigh = strategyMatches.reduce((s, m) => s + m.estimatedHigh, 0);
+  const avgConfidence =
+    strategyMatches.length > 0
+      ? Math.round(
+          strategyMatches.reduce((s, m) => s + m.confidence, 0) /
+            strategyMatches.length
+        )
+      : 0;
+
+  const total = allPowerUps.length;
+  const connectedCount = connectedIds.size;
+  const percentage = total > 0 ? Math.round((connectedCount / total) * 100) : 0;
+
+  return {
+    conservative: totalLow,
+    base: totalBase,
+    aggressive: totalHigh,
+    confidence: avgConfidence,
+    connectedSources: connectedCount,
+    totalSources: total,
+    percentage,
+    topStrategies: strategyMatches.slice(0, 10).map((m) => m.strategyTitle),
+    strategyMatches,
   };
 }

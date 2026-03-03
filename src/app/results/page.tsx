@@ -12,15 +12,21 @@ import {
   BadgeDollarSign,
   Banknote,
   PiggyBank,
+  ShieldCheck,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type { SavingsEstimate } from "@/lib/types";
+import type { SavingsEstimate, StrategyMatch } from "@/lib/types";
 
 function formatCurrency(amount: number): string {
   if (amount >= 1000) {
     return `$${Math.round(amount / 1000)}k`;
   }
+  return `$${amount.toLocaleString()}`;
+}
+
+function formatDollars(amount: number): string {
   return `$${amount.toLocaleString()}`;
 }
 
@@ -53,6 +59,9 @@ export default function ResultsPage() {
   if (!estimate) {
     return null;
   }
+
+  const hasStrategyMatches =
+    estimate.strategyMatches && estimate.strategyMatches.length > 0;
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center bg-background px-4 py-12 overflow-hidden selection:bg-primary/30">
@@ -176,29 +185,86 @@ export default function ResultsPage() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               Based on <strong className="text-foreground/80 font-semibold">{estimate.connectedSources}</strong> of <strong className="text-foreground/80 font-semibold">{estimate.totalSources}</strong> data sources connected ({estimate.percentage}%)
             </p>
+            {hasStrategyMatches && (
+              <div className="flex items-center gap-1.5 text-xs text-primary/80 pt-1">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Data-driven analysis from your connected accounts</span>
+              </div>
+            )}
           </div>
 
-          <div className="space-y-4 rounded-2xl border border-border bg-card/30 backdrop-blur-md p-6 shadow-xl">
-            <p className="text-sm font-semibold uppercase tracking-wider text-foreground/80">Top Strategies Identified</p>
-            <ul className="space-y-3">
-              {estimate.topStrategies.slice(0, 7).map((s, i) => (
-                <li
-                  key={s}
-                  className="flex items-start gap-3 text-sm text-muted-foreground animate-in fade-in slide-in-from-left-2"
-                  style={{ animationDelay: `${i * 100 + 500}ms`, animationFillMode: 'both' }}
-                >
-                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
-                    <DollarSign className="h-3 w-3 text-primary" />
+          {/* Per-Strategy Breakdowns (when integration data exists) */}
+          {hasStrategyMatches && (
+            <div className="space-y-4 rounded-2xl border border-border bg-card/30 backdrop-blur-md p-6 shadow-xl">
+              <p className="text-sm font-semibold uppercase tracking-wider text-foreground/80">
+                Strategy Breakdown
+              </p>
+              <div className="space-y-3">
+                {(estimate.strategyMatches as StrategyMatch[]).slice(0, 10).map((match, i) => (
+                  <div
+                    key={match.strategyId}
+                    className="flex items-start gap-3 rounded-xl border border-border/50 bg-foreground/[0.02] p-4 animate-in fade-in slide-in-from-left-2"
+                    style={{ animationDelay: `${i * 80 + 300}ms`, animationFillMode: 'both' }}
+                  >
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 border border-primary/20">
+                      <DollarSign className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {match.strategyTitle}
+                        </p>
+                        <span className="shrink-0 text-sm font-bold text-primary">
+                          {formatDollars(match.estimatedBase)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDollars(match.estimatedLow)} - {formatDollars(match.estimatedHigh)}
+                        </span>
+                        <span className="text-xs text-muted-foreground/60">|</span>
+                        <span className="text-xs text-muted-foreground">
+                          {match.confidence}% confidence
+                        </span>
+                      </div>
+                      {match.reasoning && (
+                        <p className="mt-1.5 text-xs text-muted-foreground/80 leading-relaxed flex items-start gap-1">
+                          <Info className="h-3 w-3 shrink-0 mt-0.5" />
+                          {match.reasoning}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <span className="leading-relaxed">{s}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fallback: strategy names only (no integration data) */}
+          {!hasStrategyMatches && (
+            <div className="space-y-4 rounded-2xl border border-border bg-card/30 backdrop-blur-md p-6 shadow-xl">
+              <p className="text-sm font-semibold uppercase tracking-wider text-foreground/80">Top Strategies Identified</p>
+              <ul className="space-y-3">
+                {estimate.topStrategies.slice(0, 7).map((s, i) => (
+                  <li
+                    key={s}
+                    className="flex items-start gap-3 text-sm text-muted-foreground animate-in fade-in slide-in-from-left-2"
+                    style={{ animationDelay: `${i * 100 + 500}ms`, animationFillMode: 'both' }}
+                  >
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
+                      <DollarSign className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="leading-relaxed">{s}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <p className="text-center text-xs text-muted-foreground/60 leading-relaxed px-4 pb-8">
-            These estimates are based on your connected data sources and 435+ tax strategies.
-            Actual savings depend on your specific tax situation and require professional review.
+            {hasStrategyMatches
+              ? "These estimates are based on your actual financial data and tax strategy analysis. Actual savings depend on your specific tax situation and require professional review."
+              : "These estimates are based on your connected data sources and 435+ tax strategies. Actual savings depend on your specific tax situation and require professional review."}
           </p>
         </div>
       </div>

@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Check, Plug } from "lucide-react";
+import {
+  Loader2,
+  Check,
+  Plug,
+  RefreshCw,
+  AlertCircle,
+  Clock,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +18,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import type { PowerUp } from "@/lib/types";
+import { PlaidLinkButton } from "@/components/dashboard/plaid-link";
+import type { PowerUp, IntegrationStatus } from "@/lib/types";
 
 const BRAND_COLORS: Record<string, string> = {
   plaid: "bg-emerald-600/20 text-emerald-500",
@@ -58,118 +66,227 @@ const BRAND_COLORS: Record<string, string> = {
   collective: "bg-violet-500/20 text-violet-500",
 };
 
+function statusLabel(status: IntegrationStatus | undefined): {
+  text: string;
+  icon: React.ReactNode;
+  color: string;
+} {
+  switch (status) {
+    case "syncing":
+      return {
+        text: "Syncing",
+        icon: <RefreshCw className="mr-1 h-3 w-3 animate-spin" />,
+        color: "bg-amber-500/20 text-amber-500",
+      };
+    case "synced":
+      return {
+        text: "Synced",
+        icon: <Check className="mr-1 h-3 w-3" />,
+        color: "bg-primary/20 text-primary",
+      };
+    case "error":
+      return {
+        text: "Error",
+        icon: <AlertCircle className="mr-1 h-3 w-3" />,
+        color: "bg-destructive/20 text-destructive",
+      };
+    case "connected":
+      return {
+        text: "Connected",
+        icon: <Check className="mr-1 h-3 w-3" />,
+        color: "bg-primary/20 text-primary",
+      };
+    case "pending":
+      return {
+        text: "Pending",
+        icon: <Clock className="mr-1 h-3 w-3" />,
+        color: "bg-muted text-muted-foreground",
+      };
+    default:
+      return {
+        text: "Connected",
+        icon: <Check className="mr-1 h-3 w-3" />,
+        color: "bg-primary/20 text-primary",
+      };
+  }
+}
+
+function formatSyncTime(iso: string | null | undefined): string {
+  if (!iso) return "Just now";
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 interface PowerUpCardProps {
   powerUp: PowerUp;
-  onToggle: (id: string, action: "connect" | "disconnect") => Promise<void>;
+  onToggle: (id: string, action: "connect" | "disconnect") => Promise<{
+    requiresPlaid?: boolean;
+    linkToken?: string;
+  } | void>;
 }
 
 export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [plaidLinkToken, setPlaidLinkToken] = useState<string | null>(null);
   const bgColor = BRAND_COLORS[powerUp.id] ?? "bg-foreground/5 text-muted-foreground";
+
+  const status = statusLabel(powerUp.integrationStatus);
 
   async function handleClick() {
     setLoading(true);
     try {
-      await onToggle(
+      const result = await onToggle(
         powerUp.id,
         powerUp.connected ? "disconnect" : "connect"
       );
+
+      // If the server returned a Plaid link token, open Plaid Link
+      if (result && "requiresPlaid" in result && result.requiresPlaid && result.linkToken) {
+        setPlaidLinkToken(result.linkToken);
+      }
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <Card
-      className={cn(
-        "flex h-full flex-col transition-all duration-300 border-border/50 bg-foreground/[0.02] hover:bg-foreground/[0.04] hover:border-border",
-        powerUp.connected && "opacity-75 bg-foreground/[0.01] border-transparent hover:border-border/50"
-      )}
-    >
-      <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
-        <div
-          className={cn(
-            "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/50",
-            bgColor,
-            (imgError || !powerUp.logoUrl) && "text-lg font-bold"
-          )}
-        >
-          {!imgError && powerUp.logoUrl ? (
-            <img
-              src={powerUp.logoUrl}
-              alt={powerUp.name}
-              width={48}
-              height={48}
-              className="h-12 w-12 object-contain p-2.5 drop-shadow-md"
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            powerUp.name.charAt(0)
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <CardTitle className="text-base font-medium leading-tight text-foreground">
-            {powerUp.name}
-          </CardTitle>
-        </div>
-        {powerUp.connected && (
-          <Badge
-            variant="secondary"
-            className="shrink-0 bg-primary/20 text-primary hover:bg-primary/20 border-none"
-          >
-            <Check className="mr-1 h-3 w-3" />
-            Connected
-          </Badge>
-        )}
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col justify-between gap-5">
-        {powerUp.connected ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-foreground">
-              Account Synced
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Found recent transactions • Last updated: Just now
-            </p>
-          </div>
-        ) : (
-          <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
-            {powerUp.description}
-          </p>
-        )}
+  function handlePlaidSuccess() {
+    setPlaidLinkToken(null);
+  }
 
-        {powerUp.connected ? (
-          <div className="mt-auto flex items-center justify-between">
-            <span className="text-xs text-muted-foreground opacity-70">
-              Active Connection
-            </span>
+  function handlePlaidExit() {
+    setPlaidLinkToken(null);
+    setLoading(false);
+  }
+
+  function handlePlaidError(error: string) {
+    console.error("[plaid-link]", error);
+    setPlaidLinkToken(null);
+    setLoading(false);
+  }
+
+  return (
+    <>
+      {plaidLinkToken && (
+        <PlaidLinkButton
+          linkToken={plaidLinkToken}
+          powerUpId={powerUp.id}
+          onSuccess={handlePlaidSuccess}
+          onExit={handlePlaidExit}
+          onError={handlePlaidError}
+        />
+      )}
+
+      <Card
+        className={cn(
+          "flex h-full flex-col transition-all duration-300 border-border/50 bg-foreground/[0.02] hover:bg-foreground/[0.04] hover:border-border",
+          powerUp.connected && "opacity-75 bg-foreground/[0.01] border-transparent hover:border-border/50"
+        )}
+      >
+        <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
+          <div
+            className={cn(
+              "flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/50",
+              bgColor,
+              (imgError || !powerUp.logoUrl) && "text-lg font-bold"
+            )}
+          >
+            {!imgError && powerUp.logoUrl ? (
+              <img
+                src={powerUp.logoUrl}
+                alt={powerUp.name}
+                width={48}
+                height={48}
+                className="h-12 w-12 object-contain p-2.5 drop-shadow-md"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              powerUp.name.charAt(0)
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <CardTitle className="text-base font-medium leading-tight text-foreground">
+              {powerUp.name}
+            </CardTitle>
+          </div>
+          {powerUp.connected && (
+            <Badge
+              variant="secondary"
+              className={cn(
+                "shrink-0 border-none",
+                status.color
+              )}
+            >
+              {status.icon}
+              {status.text}
+            </Badge>
+          )}
+        </CardHeader>
+        <CardContent className="flex flex-1 flex-col justify-between gap-5">
+          {powerUp.connected ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium text-foreground">
+                {powerUp.integrationStatus === "synced"
+                  ? "Data Synced"
+                  : powerUp.integrationStatus === "syncing"
+                    ? "Syncing Data..."
+                    : powerUp.integrationStatus === "error"
+                      ? "Sync Error"
+                      : "Account Connected"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {powerUp.integrationStatus === "synced" && powerUp.lastSyncedAt
+                  ? `Last synced: ${formatSyncTime(powerUp.lastSyncedAt)}`
+                  : powerUp.integrationStatus === "syncing"
+                    ? "Fetching your financial data..."
+                    : powerUp.integrationStatus === "error"
+                      ? "Reconnect to fix the issue"
+                      : "Data sync will begin shortly"}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed text-muted-foreground line-clamp-2">
+              {powerUp.description}
+            </p>
+          )}
+
+          {powerUp.connected ? (
+            <div className="mt-auto flex items-center justify-between">
+              <span className="text-xs text-muted-foreground opacity-70">
+                {powerUp.provider ? `via ${powerUp.provider}` : "Active Connection"}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground hover:text-destructive px-2"
+                disabled={loading}
+                onClick={handleClick}
+              >
+                {loading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                Disconnect
+              </Button>
+            </div>
+          ) : (
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs text-muted-foreground hover:text-destructive px-2"
+              className="mt-auto w-full transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={loading}
               onClick={handleClick}
             >
-              {loading ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
-              Disconnect
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plug className="mr-2 h-4 w-4" />
+              )}
+              Connect
             </Button>
-          </div>
-        ) : (
-          <Button
-            className="mt-auto w-full transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90"
-            disabled={loading}
-            onClick={handleClick}
-          >
-            {loading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Plug className="mr-2 h-4 w-4" />
-            )}
-            Connect
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }

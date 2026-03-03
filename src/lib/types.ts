@@ -1,5 +1,5 @@
 // ============================================================
-// RoboTax V0 — Shared Type Definitions
+// RoboTax V1 — Shared Type Definitions
 // ============================================================
 
 // ---- Auth ----
@@ -57,6 +57,13 @@ export type PowerUpCategory =
   | "property"
   | "documents";
 
+export type IntegrationStatus =
+  | "pending"
+  | "connected"
+  | "syncing"
+  | "synced"
+  | "error";
+
 export interface PowerUp {
   id: string;
   name: string;
@@ -69,6 +76,12 @@ export interface PowerUp {
   savingsWeight: number;
   /** Whether this is a native/built-in feature (no external provider) */
   isNative?: boolean;
+  /** The backing integration provider (e.g. "plaid") */
+  provider?: string | null;
+  /** Current integration sync status */
+  integrationStatus?: IntegrationStatus;
+  /** ISO timestamp of last successful data sync */
+  lastSyncedAt?: string | null;
 }
 
 export interface CategoryInfo {
@@ -93,6 +106,20 @@ export interface PowerUpsResponse {
   };
 }
 
+// ---- Strategy Matches ----
+
+export interface StrategyMatch {
+  strategyId: string;
+  strategyTitle: string;
+  estimatedLow: number;
+  estimatedBase: number;
+  estimatedHigh: number;
+  confidence: number;
+  reasoning: string;
+  evidence: Record<string, unknown>;
+  status: "identified" | "verified" | "claimed" | "dismissed";
+}
+
 // ---- Savings ----
 
 export interface SavingsEstimate {
@@ -104,6 +131,8 @@ export interface SavingsEstimate {
   totalSources: number;
   percentage: number;
   topStrategies: string[];
+  /** Per-strategy data-driven matches (present when integration data exists) */
+  strategyMatches?: StrategyMatch[];
 }
 
 export interface SavingsResponse {

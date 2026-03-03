@@ -11,7 +11,10 @@ interface PowerUpGridProps {
   category: PowerUpCategory;
   search: string;
   onSearchChange: (value: string) => void;
-  onToggle: (id: string, action: "connect" | "disconnect") => Promise<void>;
+  onToggle: (id: string, action: "connect" | "disconnect") => Promise<{
+    requiresPlaid?: boolean;
+    linkToken?: string;
+  } | void>;
 }
 
 export function PowerUpGrid({

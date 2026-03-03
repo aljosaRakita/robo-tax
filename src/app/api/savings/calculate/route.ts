@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json(response);
   }
 
-  const estimate = calculateSavings(allPowerUps, connectedSet);
+  const estimate = await calculateSavings(user.id, allPowerUps, connectedSet);
 
   const response: SavingsResponse = {
     success: true,
