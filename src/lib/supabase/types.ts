@@ -121,6 +121,27 @@ export interface Database {
           },
         ];
       };
+      tax_strategies: {
+        Row: {
+          id: string;
+          title: string;
+          workflow: string;
+          priority: number;
+        };
+        Insert: {
+          id: string;
+          title: string;
+          workflow: string;
+          priority: number;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          workflow?: string;
+          priority?: number;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
