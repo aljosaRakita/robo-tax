@@ -56,6 +56,12 @@ export type PowerUpCategory =
   | "real-estate"
   | "payroll"
   | "r-and-d"
+  | "health-insurance"
+  | "retirement"
+  | "expenses"
+  | "home-office"
+  | "mileage"
+  | "s-corp"
   | "other";
 
 export interface PowerUp {
@@ -68,6 +74,8 @@ export interface PowerUp {
   connected: boolean;
   /** Weight multiplier for savings calculation (1-5) */
   savingsWeight: number;
+  /** Whether this is a native/built-in feature (no external provider) */
+  isNative?: boolean;
 }
 
 export interface CategoryInfo {

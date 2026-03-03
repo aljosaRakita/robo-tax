@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/mock-auth";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function RootPage() {
-  const session = await getSession();
-  if (session) redirect("/dashboard");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) redirect("/dashboard");
   redirect("/login");
 }

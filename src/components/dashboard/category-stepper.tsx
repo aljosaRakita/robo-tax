@@ -11,6 +11,12 @@ import {
   Users,
   Puzzle,
   FlaskConical,
+  HeartPulse,
+  PiggyBank,
+  Receipt,
+  Laptop,
+  Car,
+  Building2,
   ChevronLeft,
   ChevronRight,
   Check,
@@ -24,6 +30,12 @@ const iconMap: Record<string, React.ElementType> = {
   users: Users,
   puzzle: Puzzle,
   "flask-conical": FlaskConical,
+  "heart-pulse": HeartPulse,
+  "piggy-bank": PiggyBank,
+  receipt: Receipt,
+  laptop: Laptop,
+  car: Car,
+  "building-2": Building2,
 };
 
 interface CategoryStepperProps {

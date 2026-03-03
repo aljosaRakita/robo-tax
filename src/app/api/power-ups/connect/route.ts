@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/mock-auth";
-import { userConnections, powerUps } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  await new Promise((r) => setTimeout(r, 600));
+  const supabase = await createClient();
 
-  const session = await getSession();
-  if (!session) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
@@ -20,17 +22,35 @@ export async function POST(request: Request) {
     );
   }
 
-  const exists = powerUps.some((p) => p.id === powerUpId);
-  if (!exists) {
+  // Verify power-up exists
+  const { data: powerUp } = await supabase
+    .from("power_ups")
+    .select("id")
+    .eq("id", powerUpId)
+    .single();
+
+  if (!powerUp) {
     return NextResponse.json({ error: "Power-up not found" }, { status: 404 });
   }
 
-  const connections = userConnections.get(session.userId) ?? new Set<string>();
-
   if (action === "connect") {
-    connections.add(powerUpId);
+    const { error } = await supabase
+      .from("user_connections")
+      .upsert({ user_id: user.id, power_up_id: powerUpId });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   } else if (action === "disconnect") {
-    connections.delete(powerUpId);
+    const { error } = await supabase
+      .from("user_connections")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("power_up_id", powerUpId);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
   } else {
     return NextResponse.json(
       { error: "Action must be 'connect' or 'disconnect'" },
@@ -38,10 +58,18 @@ export async function POST(request: Request) {
     );
   }
 
-  userConnections.set(session.userId, connections);
+  // Get updated stats
+  const { count: connectedCount } = await supabase
+    .from("user_connections")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
 
-  const total = powerUps.length;
-  const connectedCount = connections.size;
+  const { count: totalCount } = await supabase
+    .from("power_ups")
+    .select("*", { count: "exact", head: true });
+
+  const total = totalCount ?? 0;
+  const connected = connectedCount ?? 0;
 
   return NextResponse.json({
     success: true,
@@ -49,8 +77,8 @@ export async function POST(request: Request) {
     action,
     stats: {
       total,
-      connected: connectedCount,
-      percentage: total > 0 ? Math.round((connectedCount / total) * 100) : 0,
+      connected,
+      percentage: total > 0 ? Math.round((connected / total) * 100) : 0,
     },
   });
 }

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import { findUserByEmail } from "@/lib/mock-data";
-import { createSession } from "@/lib/mock-auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  await new Promise((r) => setTimeout(r, 400));
-
   const body = await request.json();
   const { email, password } = body;
 
@@ -15,25 +12,36 @@ export async function POST(request: Request) {
     );
   }
 
-  const user = findUserByEmail(email);
-  if (!user || user.password !== password) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
     return NextResponse.json(
       { success: false, error: "Invalid email or password" },
       { status: 401 }
     );
   }
 
-  await createSession(user.id, user.email);
+  const user = data.user;
+  const profile = await supabase
+    .from("profiles")
+    .select("name, phone, email_verified, phone_verified")
+    .eq("id", user.id)
+    .single();
 
   return NextResponse.json({
     success: true,
     user: {
       id: user.id,
       email: user.email,
-      phone: user.phone,
-      name: user.name,
-      emailVerified: user.emailVerified,
-      phoneVerified: user.phoneVerified,
+      phone: profile.data?.phone ?? "",
+      name: profile.data?.name ?? "",
+      emailVerified: profile.data?.email_verified ?? false,
+      phoneVerified: profile.data?.phone_verified ?? false,
     },
   });
 }

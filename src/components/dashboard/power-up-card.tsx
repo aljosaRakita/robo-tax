@@ -45,6 +45,27 @@ const BRAND_COLORS: Record<string, string> = {
   slack: "bg-purple-500",
   asana: "bg-rose-500",
   stripe: "bg-violet-600",
+  // Health Insurance
+  "stride-health": "bg-violet-500",
+  "healthcare-gov": "bg-blue-600",
+  // Retirement
+  "fidelity-retirement": "bg-green-700",
+  vanguard: "bg-red-700",
+  schwab: "bg-sky-600",
+  // Expenses
+  "quickbooks-expenses": "bg-green-600",
+  expensify: "bg-green-900",
+  hurdlr: "bg-emerald-500",
+  // Home Office (native — no logo)
+  "home-office-calc": "bg-slate-600",
+  "home-office-actual": "bg-slate-700",
+  // Mileage
+  mileiq: "bg-sky-500",
+  everlance: "bg-emerald-600",
+  "hurdlr-mi": "bg-emerald-500",
+  // S-Corp
+  "gusto-scorp": "bg-orange-500",
+  collective: "bg-violet-500",
 };
 
 interface PowerUpCardProps {

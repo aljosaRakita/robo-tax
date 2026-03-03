@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/mock-auth";
-import { findUserById, checkVerificationCode } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  await new Promise((r) => setTimeout(r, 300));
+  const supabase = await createClient();
 
-  const session = await getSession();
-  if (!session) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
     return NextResponse.json(
       { success: false, error: "Not authenticated" },
       { status: 401 }
@@ -30,29 +32,68 @@ export async function POST(request: Request) {
     );
   }
 
-  const valid = checkVerificationCode(session.userId, type, code);
-  if (!valid) {
-    return NextResponse.json(
-      { success: false, error: "Invalid verification code" },
-      { status: 400 }
-    );
+  if (type === "email") {
+    const { error } = await supabase.auth.verifyOtp({
+      email: user.email!,
+      token: code,
+      type: "email",
+    });
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: "Invalid verification code" },
+        { status: 400 }
+      );
+    }
+
+    await supabase
+      .from("profiles")
+      .update({ email_verified: true })
+      .eq("id", user.id);
   }
 
-  const user = findUserById(session.userId);
-  if (!user) {
-    return NextResponse.json(
-      { success: false, error: "User not found" },
-      { status: 404 }
-    );
+  if (type === "phone") {
+    const phone = user.user_metadata?.phone;
+    if (!phone) {
+      return NextResponse.json(
+        { success: false, error: "No phone number on file" },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabase.auth.verifyOtp({
+      phone,
+      token: code,
+      type: "sms",
+    });
+
+    if (error) {
+      return NextResponse.json(
+        { success: false, error: "Invalid verification code" },
+        { status: 400 }
+      );
+    }
+
+    await supabase
+      .from("profiles")
+      .update({ phone_verified: true })
+      .eq("id", user.id);
   }
 
-  if (type === "email") user.emailVerified = true;
-  if (type === "phone") user.phoneVerified = true;
+  // Fetch updated profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("email_verified, phone_verified")
+    .eq("id", user.id)
+    .single();
+
+  const emailVerified = profile?.email_verified ?? false;
+  const phoneVerified = profile?.phone_verified ?? false;
 
   return NextResponse.json({
     success: true,
-    emailVerified: user.emailVerified,
-    phoneVerified: user.phoneVerified,
-    fullyVerified: user.emailVerified && user.phoneVerified,
+    emailVerified,
+    phoneVerified,
+    fullyVerified: emailVerified && phoneVerified,
   });
 }

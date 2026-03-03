@@ -1,14 +1,7 @@
 import { NextResponse } from "next/server";
-import {
-  createUser,
-  findUserByEmail,
-  generateVerificationCode,
-} from "@/lib/mock-data";
-import { createSession } from "@/lib/mock-auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  await new Promise((r) => setTimeout(r, 500));
-
   const body = await request.json();
   const { email, phone, password, name } = body;
 
@@ -19,33 +12,37 @@ export async function POST(request: Request) {
     );
   }
 
-  const existing = findUserByEmail(email);
-  if (existing) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name, phone },
+    },
+  });
+
+  if (error) {
+    const status = error.message.includes("already registered") ? 409 : 400;
     return NextResponse.json(
-      { success: false, error: "An account with this email already exists" },
-      { status: 409 }
+      { success: false, error: error.message },
+      { status }
     );
   }
 
-  const user = createUser({ email, phone, password, name });
-
-  generateVerificationCode(user.id, "email");
-  generateVerificationCode(user.id, "phone");
-
-  await createSession(user.id, user.email);
+  const user = data.user;
 
   return NextResponse.json(
     {
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        phone: user.phone,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        phoneVerified: user.phoneVerified,
+        id: user?.id,
+        email: user?.email,
+        phone,
+        name,
+        emailVerified: false,
+        phoneVerified: false,
       },
-      verificationHint: "Use code 123456 for both email and phone",
     },
     { status: 201 }
   );
