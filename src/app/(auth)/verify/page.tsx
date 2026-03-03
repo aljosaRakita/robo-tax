@@ -67,28 +67,28 @@ export default function VerifyPage() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-2xl">Verify your identity</CardTitle>
-        <CardDescription>
+    <Card className="glass-panel border-0 bg-card/40 p-2 sm:p-4">
+      <CardHeader className="space-y-3 pb-6">
+        <CardTitle className="text-2xl font-semibold tracking-tight">Verify your identity</CardTitle>
+        <CardDescription className="text-sm text-muted-foreground">
           Enter the 6-digit codes sent to your email and phone.
-          <span className="mt-1 block text-xs font-medium text-primary">
+          <span className="mt-3 flex items-center rounded-md bg-primary/10 px-3 py-2 text-xs font-medium text-primary border border-primary/20">
             Hint: Use code 123456 for both
           </span>
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
+      <CardContent className="space-y-8 pb-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
             {emailVerified ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CheckCircle2 className="h-6 w-6 text-primary animate-fade-in" />
             ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
+              <Circle className="h-6 w-6 text-muted-foreground/50" />
             )}
-            <Label className="text-base font-medium">Email verification</Label>
+            <Label className="text-base font-medium text-foreground/90">Email verification</Label>
           </div>
           {!emailVerified && (
-            <div className="flex gap-2">
+            <div className="flex gap-3 pl-9">
               <Input
                 placeholder="123456"
                 maxLength={6}
@@ -96,11 +96,12 @@ export default function VerifyPage() {
                 onChange={(e) =>
                   setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
+                className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
               />
               <Button
                 onClick={() => verify("email")}
                 disabled={loading === "email"}
-                className="shrink-0"
+                className="shrink-0 h-11 px-6 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all duration-300"
               >
                 {loading === "email" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -111,17 +112,17 @@ export default function VerifyPage() {
           )}
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
             {phoneVerified ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CheckCircle2 className="h-6 w-6 text-primary animate-fade-in" />
             ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
+              <Circle className="h-6 w-6 text-muted-foreground/50" />
             )}
-            <Label className="text-base font-medium">Phone verification</Label>
+            <Label className="text-base font-medium text-foreground/90">Phone verification</Label>
           </div>
           {!phoneVerified && (
-            <div className="flex gap-2">
+            <div className="flex gap-3 pl-9">
               <Input
                 placeholder="123456"
                 maxLength={6}
@@ -129,11 +130,12 @@ export default function VerifyPage() {
                 onChange={(e) =>
                   setPhoneCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
+                className="h-11 bg-background/50 border-white/10 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
               />
               <Button
                 onClick={() => verify("phone")}
                 disabled={loading === "phone"}
-                className="shrink-0"
+                className="shrink-0 h-11 px-6 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_20px_rgba(16,185,129,0.25)] transition-all duration-300"
               >
                 {loading === "phone" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -144,10 +146,10 @@ export default function VerifyPage() {
           )}
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="pt-2">
         {emailVerified && phoneVerified && (
           <Button
-            className="w-full"
+            className="w-full h-11 text-base font-medium shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] transition-all duration-300 animate-slide-up"
             onClick={() => {
               router.push("/dashboard");
               router.refresh();

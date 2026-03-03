@@ -15,7 +15,7 @@ export default async function ProtectedLayout({
   if (!user) redirect("/login");
 
   return (
-    <div className="flex min-h-dvh flex-col bg-muted/40">
+    <div className="flex min-h-dvh flex-col bg-background text-foreground selection:bg-primary/30">
       <NavBar email={user.email ?? ""} />
       <main className="flex-1">{children}</main>
     </div>
