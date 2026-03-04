@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const origin = new URL(request.url).origin;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signUp({
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     password,
     options: {
       data: { name, phone },
-      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
     },
   });
 

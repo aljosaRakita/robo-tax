@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const supabase = await createClient();
-  const origin = new URL(request.url).origin;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
 
   if (type === "email") {
     if (!email) {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       type: "signup",
       email,
       options: {
-        emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
       },
     });
 

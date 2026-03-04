@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
-  const origin = new URL(request.url).origin;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
 
   if (code) {
     const supabase = await createClient();
@@ -18,10 +18,10 @@ export async function GET(request: Request) {
         .update({ email_verified: true })
         .eq("id", data.user.id);
 
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${siteUrl}${next}`);
     }
   }
 
   // If code exchange fails, redirect to login with an error
-  return NextResponse.redirect(`${origin}/login?error=invalid_link`);
+  return NextResponse.redirect(`${siteUrl}/login?error=invalid_link`);
 }
