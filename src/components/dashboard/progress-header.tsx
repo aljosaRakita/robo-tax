@@ -32,7 +32,7 @@ export function ProgressHeader({
         isCompact
           ? "rounded-xl border border-border bg-background/90 backdrop-blur-xl p-3 sm:p-4 shadow-md"
           : "relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-2xl",
-        percentage >= 30 && "animate-pulse-glow"
+        percentage >= 30 && "animate-pulse-glow-slow"
       )}
       style={percentage >= 30 ? glowStyle : undefined}
     >

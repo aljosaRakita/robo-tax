@@ -212,7 +212,7 @@ export function PowerUpCard({ powerUp, onToggle, demoTarget, onDemoPlaidComplete
         className={cn(
           "flex h-full flex-col transition-all duration-300 border-border/50 bg-foreground/[0.02] hover:bg-foreground/[0.04] hover:border-border",
           powerUp.connected && "opacity-75 bg-foreground/[0.01] border-transparent hover:border-border/50",
-          demoTarget && !powerUp.connected && "border-primary/50 animate-pulse shadow-[0_0_15px_rgba(59,108,245,0.2)]"
+          demoTarget && !powerUp.connected && "animate-breathe"
         )}
       >
         <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">
