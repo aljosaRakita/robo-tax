@@ -203,9 +203,9 @@ async function calculateDemoSavings(
     estimatedLow: Number(m.estimated_low),
     estimatedBase: Number(m.estimated_base),
     estimatedHigh: Number(m.estimated_high),
-    confidence: m.confidence,
-    reasoning: m.reasoning ?? "",
-    evidence: (m.evidence as Record<string, unknown>) ?? {},
+    confidence: 90,
+    reasoning: "",
+    evidence: {},
     status: (m.status as StrategyMatch["status"]) ?? "identified",
   }));
 
