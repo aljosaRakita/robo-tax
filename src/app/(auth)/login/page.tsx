@@ -42,6 +42,13 @@ export default function LoginPage() {
 
       toast.success("Welcome back!");
 
+      // Store demo flag for dashboard guided flow
+      if (data.isDemo) {
+        sessionStorage.setItem("robotax-demo", "1");
+      } else {
+        sessionStorage.removeItem("robotax-demo");
+      }
+
       // Redirect users with unverified email to verification page
       if (!data.user?.emailVerified) {
         sessionStorage.setItem("robotax-verify", JSON.stringify({

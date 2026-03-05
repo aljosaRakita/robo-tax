@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { ProgressHeader } from "@/components/dashboard/progress-header";
@@ -9,14 +9,17 @@ import { CategoryStepper } from "@/components/dashboard/category-stepper";
 import { PowerUpGrid } from "@/components/dashboard/power-up-grid";
 import { SavingsDialog } from "@/components/dashboard/savings-dialog";
 import { CategoryPrompt } from "@/components/dashboard/category-prompt";
+import { DEMO_TARGETS } from "@/lib/demo";
 import type {
   PowerUp,
   CategoryInfo,
   IntegrationStatus,
+  SavingsResponse,
 } from "@/lib/types";
 
 export default function DashboardPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -24,6 +27,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const [dismissedPrompts, setDismissedPrompts] = useState<Set<string>>(new Set());
+  const [isDemo, setIsDemo] = useState(false);
+  const demoAdvancingRef = useRef(false);
 
   // Fetch power-ups and integration statuses
   const fetchPowerUps = useCallback(async () => {
@@ -83,6 +88,11 @@ export default function DashboardPage() {
     }
   }, [searchParams, fetchPowerUps]);
 
+  // Detect demo mode from sessionStorage
+  useEffect(() => {
+    setIsDemo(sessionStorage.getItem("robotax-demo") === "1");
+  }, []);
+
   useEffect(() => {
     function onScroll() {
       const y = window.scrollY;
@@ -93,9 +103,73 @@ export default function DashboardPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Demo: auto-trigger calculate savings and navigate to results
+  const demoCalculate = useCallback(
+    async (connIds: string[]) => {
+      try {
+        const res = await fetch("/api/savings/calculate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ connectedIds: connIds }),
+        });
+        const data: SavingsResponse = await res.json();
+        if (data.estimate) {
+          localStorage.setItem("robotax-results", JSON.stringify(data.estimate));
+          localStorage.removeItem("robotax-results-seen");
+          router.push("/results");
+        }
+      } catch {
+        // Demo should not fail visibly
+      }
+    },
+    [router]
+  );
+
+  // Demo: advance to next category after a connect
+  const demoAutoAdvance = useCallback(
+    (connectedPowerUpId: string) => {
+      if (!isDemo || demoAdvancingRef.current) return;
+
+      // Find which category this power-up belongs to
+      const pu = powerUps.find((p) => p.id === connectedPowerUpId);
+      if (!pu) return;
+
+      const catIdx = categories.findIndex((c) => c.id === pu.category);
+      if (catIdx < 0) return;
+
+      const isLastCategory = catIdx >= categories.length - 1;
+
+      if (isLastCategory) {
+        // Last category — auto-trigger calculate after brief delay
+        demoAdvancingRef.current = true;
+        setTimeout(async () => {
+          // Gather all connected IDs
+          const updatedPowerUps = powerUps.map((p) =>
+            p.id === connectedPowerUpId ? { ...p, connected: true } : p
+          );
+          const allConnected = updatedPowerUps
+            .filter((p) => p.connected)
+            .map((p) => p.id);
+          await demoCalculate(allConnected);
+          demoAdvancingRef.current = false;
+        }, 1200);
+      } else {
+        // Auto-advance to next category
+        demoAdvancingRef.current = true;
+        setTimeout(() => {
+          setCurrentStep(catIdx + 1);
+          setSearch("");
+          demoAdvancingRef.current = false;
+        }, 1000);
+      }
+    },
+    [isDemo, powerUps, categories, demoCalculate]
+  );
+
   const handleToggle = useCallback(
     async (id: string, action: "connect" | "disconnect"): Promise<{
       requiresPlaid?: boolean;
+      requiresDemoPlaid?: boolean;
       linkToken?: string;
     } | void> => {
       // Optimistic update
@@ -113,6 +187,14 @@ export default function DashboardPage() {
 
       const data = await res.json();
 
+      // Demo: mock Plaid modal
+      if (data.requiresDemoPlaid) {
+        setPowerUps((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, connected: false } : p))
+        );
+        return { requiresDemoPlaid: true };
+      }
+
       // If server says this needs Plaid, revert optimistic update and return link token
       if (data.requiresPlaid && data.linkToken) {
         setPowerUps((prev) =>
@@ -124,9 +206,14 @@ export default function DashboardPage() {
       // After successful connect, refetch statuses after a brief delay for background sync
       if (action === "connect") {
         setTimeout(() => fetchPowerUps(), 1500);
+
+        // Demo: auto-advance to next category
+        if (isDemo) {
+          demoAutoAdvance(id);
+        }
       }
     },
-    [fetchPowerUps]
+    [fetchPowerUps, isDemo, demoAutoAdvance]
   );
 
   const connectedIds = useMemo(
@@ -211,10 +298,16 @@ export default function DashboardPage() {
             search={search}
             onSearchChange={setSearch}
             onToggle={handleToggle}
+            demoTargetId={isDemo ? DEMO_TARGETS[currentCategory.id] : undefined}
+            onDemoPlaidComplete={isDemo ? () => {
+              // Plaid bulk connect done — refetch and auto-advance
+              fetchPowerUps();
+              demoAutoAdvance(DEMO_TARGETS[currentCategory.id]);
+            } : undefined}
           />
         )}
 
-        {currentCategory && currentStep < categories.length - 1 && (
+        {currentCategory && currentStep < categories.length - 1 && !isDemo && (
           <CategoryPrompt
             connectedInCategory={connectedByCategory[currentCategory.id] ?? 0}
             totalInCategory={totalByCategory[currentCategory.id] ?? 0}

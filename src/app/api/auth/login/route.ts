@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { isDemoUser } from "@/lib/demo";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
   // The link-click flow confirms the email in Supabase but may not update our table.
   const supabaseEmailConfirmed = !!user.email_confirmed_at;
   const profileEmailVerified = profile.data?.email_verified ?? false;
-  const emailVerified = profileEmailVerified || supabaseEmailConfirmed;
+  const emailVerified = profileEmailVerified || supabaseEmailConfirmed || isDemoUser(user.email);
 
   // If Supabase says confirmed but our table is stale, sync it
   if (supabaseEmailConfirmed && !profileEmailVerified) {
@@ -47,8 +49,24 @@ export async function POST(request: Request) {
       .eq("id", user.id);
   }
 
+  // Demo user: reset connections and refresh data freshness for a repeatable demo
+  if (isDemoUser(user.email)) {
+    const admin = createAdminClient();
+    // Delete all user_connections so dashboard starts fresh
+    await admin
+      .from("user_connections")
+      .delete()
+      .eq("user_id", user.id);
+    // Refresh integration_data.fetched_at so confidence doesn't degrade
+    await admin
+      .from("integration_data")
+      .update({ fetched_at: new Date().toISOString(), is_stale: false })
+      .eq("user_id", user.id);
+  }
+
   return NextResponse.json({
     success: true,
+    isDemo: isDemoUser(user.email),
     user: {
       id: user.id,
       email: user.email,

@@ -1,6 +1,7 @@
 import type { SavingsEstimate, StrategyMatch } from "@/lib/types";
 import { runStrategyEngine } from "@/lib/strategy-engine";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isDemoUser } from "@/lib/demo";
 import type { Database } from "@/lib/supabase/types";
 
 type StrategyMatchRow = Database["public"]["Tables"]["user_strategy_matches"]["Row"];
@@ -83,6 +84,11 @@ export async function calculateSavings(
   allPowerUps: PowerUpInput[],
   connectedIds: Set<string>
 ): Promise<SavingsEstimate> {
+  // Demo user: read pre-seeded matches directly, bypass engine
+  if (isDemoUser(userId)) {
+    return calculateDemoSavings(userId, allPowerUps, connectedIds);
+  }
+
   // Check if user has any integration data
   const admin = createAdminClient();
   const { count } = await admin
@@ -160,6 +166,65 @@ export async function calculateSavings(
     base: totalBase,
     aggressive: totalHigh,
     confidence: avgConfidence,
+    connectedSources: connectedCount,
+    totalSources: total,
+    percentage,
+    topStrategies: strategyMatches.slice(0, 10).map((m) => m.strategyTitle),
+    strategyMatches,
+  };
+}
+
+// ---- Demo-specific calculation ----
+
+async function calculateDemoSavings(
+  userId: string,
+  allPowerUps: PowerUpInput[],
+  connectedIds: Set<string>
+): Promise<SavingsEstimate> {
+  const admin = createAdminClient();
+
+  // Read pre-seeded user_strategy_matches
+  const { data: matchRows } = await admin
+    .from("user_strategy_matches")
+    .select("*")
+    .eq("user_id", userId);
+
+  const matches = (matchRows ?? []) as StrategyMatchRow[];
+
+  // Fetch strategy titles
+  const { data: strategies } = await admin
+    .from("tax_strategies")
+    .select("id, title");
+  const titleMap = new Map((strategies ?? []).map((s) => [s.id, s.title]));
+
+  const strategyMatches: StrategyMatch[] = matches.map((m) => ({
+    strategyId: m.strategy_id,
+    strategyTitle: titleMap.get(m.strategy_id) ?? m.strategy_id,
+    estimatedLow: Number(m.estimated_low),
+    estimatedBase: Number(m.estimated_base),
+    estimatedHigh: Number(m.estimated_high),
+    confidence: m.confidence,
+    reasoning: m.reasoning ?? "",
+    evidence: (m.evidence as Record<string, unknown>) ?? {},
+    status: (m.status as StrategyMatch["status"]) ?? "identified",
+  }));
+
+  strategyMatches.sort((a, b) => b.estimatedBase - a.estimatedBase);
+
+  // Fixed hero numbers for the demo
+  const aggressive = 365632;
+  const base = 243755;
+  const conservative = 146253;
+
+  const total = allPowerUps.length;
+  const connectedCount = connectedIds.size;
+  const percentage = total > 0 ? Math.round((connectedCount / total) * 100) : 0;
+
+  return {
+    conservative,
+    base,
+    aggressive,
+    confidence: 90,
     connectedSources: connectedCount,
     totalSources: total,
     percentage,

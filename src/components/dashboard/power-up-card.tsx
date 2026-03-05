@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PlaidLinkButton } from "@/components/dashboard/plaid-link";
+import { MockPlaidLink } from "@/components/dashboard/mock-plaid-link";
 import type { PowerUp, IntegrationStatus } from "@/lib/types";
 
 const BRAND_COLORS: Record<string, string> = {
@@ -126,14 +127,18 @@ interface PowerUpCardProps {
   powerUp: PowerUp;
   onToggle: (id: string, action: "connect" | "disconnect") => Promise<{
     requiresPlaid?: boolean;
+    requiresDemoPlaid?: boolean;
     linkToken?: string;
   } | void>;
+  demoTarget?: boolean;
+  onDemoPlaidComplete?: () => void;
 }
 
-export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
+export function PowerUpCard({ powerUp, onToggle, demoTarget, onDemoPlaidComplete }: PowerUpCardProps) {
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [plaidLinkToken, setPlaidLinkToken] = useState<string | null>(null);
+  const [showDemoPlaid, setShowDemoPlaid] = useState(false);
   const bgColor = BRAND_COLORS[powerUp.id] ?? "bg-foreground/5 text-muted-foreground";
 
   const status = statusLabel(powerUp.integrationStatus);
@@ -145,6 +150,12 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
         powerUp.id,
         powerUp.connected ? "disconnect" : "connect"
       );
+
+      // If the server returned a demo Plaid flag, show mock modal
+      if (result && "requiresDemoPlaid" in result && result.requiresDemoPlaid) {
+        setShowDemoPlaid(true);
+        return;
+      }
 
       // If the server returned a Plaid link token, open Plaid Link
       if (result && "requiresPlaid" in result && result.requiresPlaid && result.linkToken) {
@@ -172,6 +183,21 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
 
   return (
     <>
+      {showDemoPlaid && (
+        <MockPlaidLink
+          powerUpId={powerUp.id}
+          onSuccess={() => {
+            setShowDemoPlaid(false);
+            setLoading(false);
+            onDemoPlaidComplete?.();
+          }}
+          onExit={() => {
+            setShowDemoPlaid(false);
+            setLoading(false);
+          }}
+        />
+      )}
+
       {plaidLinkToken && (
         <PlaidLinkButton
           linkToken={plaidLinkToken}
@@ -185,7 +211,8 @@ export function PowerUpCard({ powerUp, onToggle }: PowerUpCardProps) {
       <Card
         className={cn(
           "flex h-full flex-col transition-all duration-300 border-border/50 bg-foreground/[0.02] hover:bg-foreground/[0.04] hover:border-border",
-          powerUp.connected && "opacity-75 bg-foreground/[0.01] border-transparent hover:border-border/50"
+          powerUp.connected && "opacity-75 bg-foreground/[0.01] border-transparent hover:border-border/50",
+          demoTarget && !powerUp.connected && "border-primary/50 animate-pulse shadow-[0_0_15px_rgba(59,108,245,0.2)]"
         )}
       >
         <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3">

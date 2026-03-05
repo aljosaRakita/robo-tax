@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requiresPlaidLink, getProviderForPowerUp } from "@/lib/integrations/index";
 import { createLinkToken } from "@/lib/integrations/plaid";
 import { Products } from "plaid";
+import { isDemoUser } from "@/lib/demo";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -37,6 +38,54 @@ export async function POST(request: Request) {
   }
 
   if (action === "connect") {
+    // Demo user: special handling
+    if (isDemoUser(user.email)) {
+      if (requiresPlaidLink(powerUpId)) {
+        // Tell the client to show the mock Plaid modal instead
+        return NextResponse.json({
+          success: true,
+          requiresDemoPlaid: true,
+        });
+      }
+
+      // Non-Plaid demo connect: instant synced status
+      const provider = getProviderForPowerUp(powerUpId);
+      const { error } = await supabase
+        .from("user_connections")
+        .upsert({
+          user_id: user.id,
+          power_up_id: powerUpId,
+          provider: provider?.id ?? null,
+          integration_status: "synced",
+        });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // Return stats for demo
+      const { count: connectedCount } = await supabase
+        .from("user_connections")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      const { count: totalCount } = await supabase
+        .from("power_ups")
+        .select("*", { count: "exact", head: true });
+      const total = totalCount ?? 0;
+      const connected = connectedCount ?? 0;
+
+      return NextResponse.json({
+        success: true,
+        powerUpId,
+        action,
+        stats: {
+          total,
+          connected,
+          percentage: total > 0 ? Math.round((connected / total) * 100) : 0,
+        },
+      });
+    }
+
     // Check if this power-up needs Plaid Link
     if (requiresPlaidLink(powerUpId)) {
       try {

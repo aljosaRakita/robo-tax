@@ -13,8 +13,11 @@ interface PowerUpGridProps {
   onSearchChange: (value: string) => void;
   onToggle: (id: string, action: "connect" | "disconnect") => Promise<{
     requiresPlaid?: boolean;
+    requiresDemoPlaid?: boolean;
     linkToken?: string;
   } | void>;
+  demoTargetId?: string;
+  onDemoPlaidComplete?: () => void;
 }
 
 export function PowerUpGrid({
@@ -23,6 +26,8 @@ export function PowerUpGrid({
   search,
   onSearchChange,
   onToggle,
+  demoTargetId,
+  onDemoPlaidComplete,
 }: PowerUpGridProps) {
   const filtered = useMemo(() => {
     return powerUps.filter((p) => {
@@ -62,6 +67,8 @@ export function PowerUpGrid({
               key={powerUp.id}
               powerUp={powerUp}
               onToggle={onToggle}
+              demoTarget={powerUp.id === demoTargetId}
+              onDemoPlaidComplete={powerUp.id === demoTargetId ? onDemoPlaidComplete : undefined}
             />
           ))}
         </div>
