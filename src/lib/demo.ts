@@ -3,7 +3,7 @@
 // ============================================================
 
 export const DEMO_USER_EMAIL = "demo@robotax.com";
-export const DEMO_USER_ID = process.env.DEMO_USER_ID ?? "";
+export const DEMO_USER_ID = process.env.DEMO_USER_ID || "b3d0ad2b-f8ae-4468-a13f-a014bb7455ff";
 
 /** Check if the given email or user ID belongs to the demo account */
 export function isDemoUser(emailOrId: string | null | undefined): boolean {

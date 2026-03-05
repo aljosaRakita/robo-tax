@@ -203,7 +203,7 @@ async function calculateDemoSavings(
     estimatedLow: Number(m.estimated_low),
     estimatedBase: Number(m.estimated_base),
     estimatedHigh: Number(m.estimated_high),
-    confidence: 90,
+    confidence: m.confidence,
     reasoning: "",
     evidence: {},
     status: (m.status as StrategyMatch["status"]) ?? "identified",

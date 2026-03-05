@@ -18,23 +18,14 @@ export function ProgressHeader({
 }: ProgressHeaderProps) {
   const isComplete = percentage === 100;
 
-  // Progressive glow: scales from 0 at 0% to full at 100%
-  const glowIntensity = Math.min(percentage / 100, 1);
-  const glowStyle = {
-    "--glow-size": `${4 + glowIntensity * 12}px`,
-    "--glow-opacity": `${glowIntensity * 0.5}`,
-  } as React.CSSProperties;
-
   return (
     <div
       className={cn(
         "transition-all duration-300",
         isCompact
           ? "rounded-xl border border-border bg-background/90 backdrop-blur-xl p-3 sm:p-4 shadow-md"
-          : "relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-2xl",
-        percentage >= 30 && "animate-pulse-glow-slow"
+          : "relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-2xl"
       )}
-      style={percentage >= 30 ? glowStyle : undefined}
     >
       {!isCompact && (
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
