@@ -198,13 +198,27 @@ async function calculateDemoSavings(
     .select("id, title");
   const titleMap = new Map((strategies ?? []).map((s) => [s.id, s.title]));
 
+  // Canonical confidence scores per strategy (avoids stale DB values)
+  const demoConfidence: Record<string, number> = {
+    "cost-segregation": 88,
+    "r-and-d-credit": 95,
+    "s-corp-election": 92,
+    "section-179": 88,
+    "qbi-deduction": 90,
+    "solo-401k": 90,
+    "augusta-rule": 75,
+    "accountable-plan": 78,
+    "family-employment": 82,
+    "home-office-deduction": 80,
+  };
+
   const strategyMatches: StrategyMatch[] = matches.map((m) => ({
     strategyId: m.strategy_id,
     strategyTitle: titleMap.get(m.strategy_id) ?? m.strategy_id,
     estimatedLow: Number(m.estimated_low),
     estimatedBase: Number(m.estimated_base),
     estimatedHigh: Number(m.estimated_high),
-    confidence: m.confidence,
+    confidence: demoConfidence[m.strategy_id] ?? m.confidence,
     reasoning: "",
     evidence: {},
     status: (m.status as StrategyMatch["status"]) ?? "identified",
