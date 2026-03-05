@@ -82,10 +82,11 @@ export function calculateSavingsFallback(
 export async function calculateSavings(
   userId: string,
   allPowerUps: PowerUpInput[],
-  connectedIds: Set<string>
+  connectedIds: Set<string>,
+  userEmail?: string | null
 ): Promise<SavingsEstimate> {
   // Demo user: read pre-seeded matches directly, bypass engine
-  if (isDemoUser(userId)) {
+  if (isDemoUser(userId) || isDemoUser(userEmail)) {
     return calculateDemoSavings(userId, allPowerUps, connectedIds);
   }
 

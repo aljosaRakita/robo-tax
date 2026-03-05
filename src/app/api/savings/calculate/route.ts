@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     savingsWeight: p.savings_weight,
   }));
 
-  const estimate = await calculateSavings(user.id, allPowerUps, connectedSet);
+  const estimate = await calculateSavings(user.id, allPowerUps, connectedSet, user.email);
 
   const response: SavingsResponse = {
     success: true,
