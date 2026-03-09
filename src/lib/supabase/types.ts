@@ -353,6 +353,41 @@ export interface Database {
           },
         ];
       };
+      waitlist: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          phone: string;
+          reason: string | null;
+          email_confirmed: boolean;
+          confirmation_code: string | null;
+          code_expires_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          phone: string;
+          reason?: string | null;
+          email_confirmed?: boolean;
+          confirmation_code?: string | null;
+          code_expires_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          email?: string;
+          phone?: string;
+          reason?: string | null;
+          email_confirmed?: boolean;
+          confirmation_code?: string | null;
+          code_expires_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
