@@ -11,11 +11,11 @@ function generateCode(): string {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const { name, email, phone, reason } = body;
+  const { name, email, phone, reason, sendVerification } = body;
 
-  if (!name || !email || !phone) {
+  if (!email) {
     return NextResponse.json(
-      { success: false, error: "Name, email, and phone are required" },
+      { success: false, error: "Email is required" },
       { status: 400 }
     );
   }
@@ -36,57 +36,86 @@ export async function POST(request: Request) {
     );
   }
 
-  // Generate a 6-digit code valid for 10 minutes
-  const code = generateCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  if (sendVerification) {
+    if (!name || !phone) {
+      return NextResponse.json(
+        { success: false, error: "Name, email, and phone are required to verify" },
+        { status: 400 }
+      );
+    }
 
-  // Upsert waitlist entry with code
+    const code = generateCode();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    const { error: upsertError } = await admin.from("waitlist").upsert(
+      {
+        name,
+        email,
+        phone,
+        reason: reason || null,
+        email_confirmed: false,
+        confirmation_code: code,
+        code_expires_at: expiresAt,
+      },
+      { onConflict: "email" }
+    );
+
+    if (upsertError) {
+      console.error("[waitlist] upsert error:", upsertError);
+      return NextResponse.json(
+        { success: false, error: "Failed to save your details" },
+        { status: 500 }
+      );
+    }
+
+    // Send verification email via Resend
+    const { error: emailError } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL!,
+      to: email,
+      subject: "Your RoboTax waitlist verification code",
+      html: `
+        <div style="font-family: 'Inter', system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">RoboTax Waitlist</h2>
+          <p style="color: #888; font-size: 14px;">Hi ${name.split(" ")[0]},</p>
+          <p style="color: #888; font-size: 14px;">Your verification code is:</p>
+          <div style="font-size: 32px; font-weight: 600; letter-spacing: 8px; text-align: center; padding: 24px; background: #111; color: #fff; border-radius: 8px; margin: 16px 0; font-family: monospace;">
+            ${code}
+          </div>
+          <p style="color: #666; font-size: 13px;">This code expires in 10 minutes.</p>
+        </div>
+      `,
+    });
+
+    if (emailError) {
+      console.error("[waitlist] email error:", emailError);
+      return NextResponse.json(
+        { success: false, error: "Failed to send verification email" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true }, { status: 201 });
+  }
+
+  // Partial save — no verification email
   const { error: upsertError } = await admin.from("waitlist").upsert(
     {
-      name,
+      name: name || "",
       email,
-      phone,
+      phone: phone || "",
       reason: reason || null,
       email_confirmed: false,
-      confirmation_code: code,
-      code_expires_at: expiresAt,
     },
     { onConflict: "email" }
   );
 
   if (upsertError) {
-    console.error("[waitlist] upsert error:", upsertError);
+    console.error("[waitlist] partial save error:", upsertError);
     return NextResponse.json(
       { success: false, error: "Failed to save your details" },
       { status: 500 }
     );
   }
 
-  // Send verification email via Resend
-  const { error: emailError } = await resend.emails.send({
-    from: "RoboTax <onboarding@resend.dev>",
-    to: email,
-    subject: "Your RoboTax waitlist verification code",
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-        <h2 style="color: #10b981; margin-bottom: 8px;">RoboTax Waitlist</h2>
-        <p>Hi ${name.split(" ")[0]},</p>
-        <p>Your verification code is:</p>
-        <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; text-align: center; padding: 24px; background: #f3f4f6; border-radius: 8px; margin: 16px 0;">
-          ${code}
-        </div>
-        <p style="color: #6b7280; font-size: 14px;">This code expires in 10 minutes.</p>
-      </div>
-    `,
-  });
-
-  if (emailError) {
-    console.error("[waitlist] email error:", emailError);
-    return NextResponse.json(
-      { success: false, error: "Failed to send verification email" },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({ success: true }, { status: 201 });
+  return NextResponse.json({ success: true });
 }

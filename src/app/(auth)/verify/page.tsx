@@ -165,7 +165,7 @@ export default function VerifyPage() {
   const showPhoneStep = emailVerified && !phoneSkipped;
 
   return (
-    <Card className="glass-panel border-0 bg-card/40 p-2 sm:p-4">
+    <Card className="border border-border bg-card p-2 sm:p-4 rounded-xl">
       <CardHeader className="space-y-3 pb-6">
         <CardTitle className="text-2xl font-semibold tracking-tight">Verify your identity</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
@@ -215,12 +215,12 @@ export default function VerifyPage() {
                   onChange={(e) =>
                     setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
-                  className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
+                  className="h-10 text-center tracking-widest text-lg"
                 />
                 <Button
                   onClick={() => verify("email")}
                   disabled={loading === "email" || emailCode.length < 6}
-                  className="shrink-0 h-11 px-5 shadow-md transition-all duration-300"
+                  className="shrink-0 h-10 px-5"
                 >
                   {loading === "email" && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -280,12 +280,12 @@ export default function VerifyPage() {
                 onChange={(e) =>
                   setPhoneCode(e.target.value.replace(/\D/g, "").slice(0, 6))
                 }
-                className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200 text-center tracking-widest text-lg"
+                className="h-10 text-center tracking-widest text-lg"
               />
               <Button
                 onClick={() => verify("phone")}
                 disabled={loading === "phone" || phoneCode.length < 6}
-                className="shrink-0 h-11 px-5 shadow-md transition-all duration-300"
+                className="shrink-0 h-10 px-5"
               >
                 {loading === "phone" && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -311,7 +311,7 @@ export default function VerifyPage() {
       <CardFooter className="flex flex-col gap-3 pt-2">
         {emailVerified && (
           <Button
-            className="w-full h-11 text-base font-medium shadow-md transition-all duration-300 animate-slide-up"
+            className="w-full h-10 animate-slide-up"
             onClick={goToDashboard}
           >
             Continue to Dashboard

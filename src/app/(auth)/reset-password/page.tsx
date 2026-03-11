@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
 
   if (done) {
     return (
-      <Card className="glass-panel border-0 bg-card/40 p-2 sm:p-4">
+      <Card className="border border-border bg-card p-2 sm:p-4 rounded-xl">
         <CardHeader className="space-y-3 pb-6">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
             <CheckCircle2 className="h-7 w-7 text-primary" />
@@ -81,7 +81,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <Card className="glass-panel border-0 bg-card/40 p-2 sm:p-4">
+    <Card className="border border-border bg-card p-2 sm:p-4 rounded-xl">
       <CardHeader className="space-y-3 pb-6">
         <CardTitle className="text-2xl font-semibold tracking-tight">Set new password</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
+              className="h-10"
             />
           </div>
           <div className="space-y-2.5">
@@ -111,14 +111,14 @@ export default function ResetPasswordPage() {
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="h-11 bg-background/50 border-border focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all duration-200"
+              className="h-10"
             />
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4 pt-6">
           <Button
             type="submit"
-            className="w-full h-11 text-base font-medium shadow-md transition-all duration-300"
+            className="w-full h-10"
             disabled={loading}
           >
             {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
