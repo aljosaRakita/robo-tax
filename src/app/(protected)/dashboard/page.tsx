@@ -77,13 +77,16 @@ export default function DashboardPage() {
     fetchPowerUps();
   }, [fetchPowerUps]);
 
-  // Handle post-Plaid redirect URL params
+  // Handle post-Plaid / post-QBO redirect URL params
   useEffect(() => {
     const plaidSuccess = searchParams.get("plaid_success");
-    if (plaidSuccess) {
+    const qboSuccess = searchParams.get("qbo_success");
+    if (plaidSuccess || qboSuccess) {
       fetchPowerUps();
       const url = new URL(window.location.href);
       url.searchParams.delete("plaid_success");
+      url.searchParams.delete("qbo_success");
+      url.searchParams.delete("qbo_error");
       window.history.replaceState({}, "", url.toString());
     }
   }, [searchParams, fetchPowerUps]);
@@ -170,6 +173,8 @@ export default function DashboardPage() {
     async (id: string, action: "connect" | "disconnect"): Promise<{
       requiresPlaid?: boolean;
       requiresDemoPlaid?: boolean;
+      requiresOAuth?: boolean;
+      oauthUrl?: string;
       linkToken?: string;
     } | void> => {
       // Optimistic update
@@ -203,6 +208,14 @@ export default function DashboardPage() {
         return { requiresPlaid: true, linkToken: data.linkToken };
       }
 
+      // If server says this needs OAuth, revert optimistic update and return URL
+      if (data.requiresOAuth && data.oauthUrl) {
+        setPowerUps((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, connected: false } : p))
+        );
+        return { requiresOAuth: true, oauthUrl: data.oauthUrl };
+      }
+
       // After successful connect, refetch statuses after a brief delay for background sync
       if (action === "connect") {
         setTimeout(() => fetchPowerUps(), 1500);
@@ -214,6 +227,22 @@ export default function DashboardPage() {
       }
     },
     [fetchPowerUps, isDemo, demoAutoAdvance]
+  );
+
+  const handlePlaidSuccess = useCallback(
+    (powerUpId: string) => {
+      // Optimistically mark as connected
+      setPowerUps((prev) =>
+        prev.map((p) =>
+          p.id === powerUpId
+            ? { ...p, connected: true, integrationStatus: "connected" as IntegrationStatus }
+            : p
+        )
+      );
+      // Refetch to get actual sync status
+      fetchPowerUps();
+    },
+    [fetchPowerUps]
   );
 
   const connectedIds = useMemo(
@@ -298,6 +327,7 @@ export default function DashboardPage() {
             search={search}
             onSearchChange={setSearch}
             onToggle={handleToggle}
+            onPlaidSuccess={handlePlaidSuccess}
             demoTargetId={isDemo ? DEMO_TARGETS[currentCategory.id] : undefined}
             onDemoPlaidComplete={isDemo ? () => {
               // Plaid bulk connect done — refetch and auto-advance

@@ -128,13 +128,16 @@ interface PowerUpCardProps {
   onToggle: (id: string, action: "connect" | "disconnect") => Promise<{
     requiresPlaid?: boolean;
     requiresDemoPlaid?: boolean;
+    requiresOAuth?: boolean;
+    oauthUrl?: string;
     linkToken?: string;
   } | void>;
+  onPlaidSuccess?: (powerUpId: string) => void;
   demoTarget?: boolean;
   onDemoPlaidComplete?: () => void;
 }
 
-export function PowerUpCard({ powerUp, onToggle, demoTarget, onDemoPlaidComplete }: PowerUpCardProps) {
+export function PowerUpCard({ powerUp, onToggle, onPlaidSuccess, demoTarget, onDemoPlaidComplete }: PowerUpCardProps) {
   const [loading, setLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [plaidLinkToken, setPlaidLinkToken] = useState<string | null>(null);
@@ -160,6 +163,13 @@ export function PowerUpCard({ powerUp, onToggle, demoTarget, onDemoPlaidComplete
       // If the server returned a Plaid link token, open Plaid Link
       if (result && "requiresPlaid" in result && result.requiresPlaid && result.linkToken) {
         setPlaidLinkToken(result.linkToken);
+        return;
+      }
+
+      // If the server returned an OAuth URL, redirect to it
+      if (result && "requiresOAuth" in result && result.requiresOAuth && result.oauthUrl) {
+        window.location.href = result.oauthUrl;
+        return;
       }
     } finally {
       setLoading(false);
@@ -168,6 +178,7 @@ export function PowerUpCard({ powerUp, onToggle, demoTarget, onDemoPlaidComplete
 
   function handlePlaidSuccess() {
     setPlaidLinkToken(null);
+    onPlaidSuccess?.(powerUp.id);
   }
 
   function handlePlaidExit() {

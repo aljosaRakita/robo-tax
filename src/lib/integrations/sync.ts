@@ -11,6 +11,12 @@ import {
   syncHoldings,
   getPlaidAccessToken,
 } from "@/lib/integrations/plaid";
+import {
+  syncPnl,
+  syncExpenses,
+  syncBalanceSheet,
+  getQboCredentials,
+} from "@/lib/integrations/quickbooks";
 import { runStrategyEngine } from "@/lib/strategy-engine";
 
 export interface SyncResult {
@@ -35,7 +41,11 @@ export async function syncProvider(
       return await syncPlaidData(userId);
     }
 
-    // Future: OAuth provider sync
+    if (provider === "quickbooks") {
+      return await syncQuickBooksData(userId);
+    }
+
+    // Future: other OAuth provider sync
     return {
       provider,
       success: false,
@@ -87,21 +97,36 @@ async function syncPlaidData(userId: string): Promise<SyncResult> {
     .eq("user_id", userId)
     .eq("provider", "plaid");
 
+  const errors: string[] = [];
+
+  // Sync accounts (fast, always available)
   try {
-    // Sync accounts first (fast, always available)
     await syncAccounts(userId, accessToken);
     syncedTypes.push("accounts");
+  } catch (err) {
+    console.error("[plaid-sync] accounts error:", err);
+    errors.push("accounts");
+  }
 
-    // Sync transactions (may take longer)
+  // Sync transactions (may not be ready immediately after linking)
+  try {
     await syncTransactions(userId, accessToken);
     syncedTypes.push("transactions");
+  } catch (err) {
+    console.error("[plaid-sync] transactions error:", err);
+    errors.push("transactions");
+  }
 
-    // Sync holdings (only if investment products are available)
+  // Sync holdings (only if investment products are available)
+  try {
     await syncHoldings(userId, accessToken);
     syncedTypes.push("holdings");
   } catch (err) {
-    console.error("[plaid-sync] Error during sync:", err);
+    console.error("[plaid-sync] holdings error:", err);
+    errors.push("holdings");
+  }
 
+  if (errors.length > 0 && syncedTypes.length === 0) {
     await admin
       .from("user_connections")
       .update({ integration_status: "error" })
@@ -110,9 +135,9 @@ async function syncPlaidData(userId: string): Promise<SyncResult> {
 
     return {
       provider: "plaid",
-      success: syncedTypes.length > 0,
-      dataTypes: syncedTypes,
-      error: err instanceof Error ? err.message : "Sync failed",
+      success: false,
+      dataTypes: [],
+      error: `Failed to sync: ${errors.join(", ")}`,
     };
   }
 
@@ -120,6 +145,81 @@ async function syncPlaidData(userId: string): Promise<SyncResult> {
     provider: "plaid",
     success: true,
     dataTypes: syncedTypes,
+    ...(errors.length > 0 && { error: `Partial sync — failed: ${errors.join(", ")}` }),
+  };
+}
+
+/**
+ * Sync all QuickBooks data for a user: P&L, expenses, and balance sheet.
+ */
+async function syncQuickBooksData(userId: string): Promise<SyncResult> {
+  const creds = await getQboCredentials(userId);
+
+  if (!creds) {
+    return {
+      provider: "quickbooks",
+      success: false,
+      dataTypes: [],
+      error: "No active QuickBooks credentials found",
+    };
+  }
+
+  const admin = createAdminClient();
+  const syncedTypes: string[] = [];
+  const errors: string[] = [];
+
+  await admin
+    .from("user_connections")
+    .update({ integration_status: "syncing" })
+    .eq("user_id", userId)
+    .eq("provider", "quickbooks");
+
+  try {
+    await syncPnl(userId, creds.realmId, creds.accessToken);
+    syncedTypes.push("pnl");
+  } catch (err) {
+    console.error("[qbo-sync] pnl error:", err);
+    errors.push("pnl");
+  }
+
+  try {
+    await syncExpenses(userId, creds.realmId, creds.accessToken);
+    syncedTypes.push("expenses");
+  } catch (err) {
+    console.error("[qbo-sync] expenses error:", err);
+    errors.push("expenses");
+  }
+
+  try {
+    await syncBalanceSheet(userId, creds.realmId, creds.accessToken);
+    syncedTypes.push("balance_sheet");
+  } catch (err) {
+    console.error("[qbo-sync] balance_sheet error:", err);
+    errors.push("balance_sheet");
+  }
+
+  if (errors.length > 0 && syncedTypes.length === 0) {
+    await admin
+      .from("user_connections")
+      .update({ integration_status: "error" })
+      .eq("user_id", userId)
+      .eq("provider", "quickbooks");
+
+    return {
+      provider: "quickbooks",
+      success: false,
+      dataTypes: [],
+      error: `Failed to sync: ${errors.join(", ")}`,
+    };
+  }
+
+  return {
+    provider: "quickbooks",
+    success: true,
+    dataTypes: syncedTypes,
+    ...(errors.length > 0 && {
+      error: `Partial sync — failed: ${errors.join(", ")}`,
+    }),
   };
 }
 

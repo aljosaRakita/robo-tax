@@ -4,6 +4,7 @@ import { requiresPlaidLink, getProviderForPowerUp } from "@/lib/integrations/ind
 import { createLinkToken } from "@/lib/integrations/plaid";
 import { Products } from "plaid";
 import { isDemoUser } from "@/lib/demo";
+import { randomBytes } from "crypto";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -119,8 +120,27 @@ export async function POST(request: Request) {
       }
     }
 
-    // Non-Plaid connect: simple toggle
+    // OAuth providers: return an OAuth URL for the client to redirect to
     const provider = getProviderForPowerUp(powerUpId);
+    if (provider?.type === "oauth" && provider.id === "quickbooks") {
+      const nonce = randomBytes(16).toString("hex");
+      const state = Buffer.from(
+        JSON.stringify({ userId: user.id, nonce })
+      ).toString("base64url");
+
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      const oauthUrl = `${siteUrl}/api/integrations/quickbooks/authorize?state=${state}`;
+
+      return NextResponse.json({
+        success: true,
+        requiresOAuth: true,
+        oauthUrl,
+        provider: provider.id,
+      });
+    }
+
+    // Other non-Plaid connect: simple toggle
     const { error } = await supabase
       .from("user_connections")
       .upsert({

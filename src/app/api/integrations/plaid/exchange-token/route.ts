@@ -4,7 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { exchangePublicToken } from "@/lib/integrations/plaid";
 import { upsertIntegrationToken } from "@/lib/integrations/token-refresh";
 import { syncProvider } from "@/lib/integrations/sync";
-import { getProviderForPowerUp } from "@/lib/integrations/index";
 
 /**
  * POST /api/integrations/plaid/exchange-token
@@ -44,9 +43,8 @@ export async function POST(request: Request) {
       plaidItemId: itemId,
     });
 
-    // Update user_connections for the specific power-up
+    // Update user_connections for the specific power-up only
     const admin = createAdminClient();
-    const provider = getProviderForPowerUp(powerUpId ?? "plaid");
 
     if (powerUpId) {
       await admin
@@ -60,23 +58,6 @@ export async function POST(request: Request) {
           },
           { onConflict: "user_id,power_up_id" }
         );
-    }
-
-    // Also mark all Plaid-backed power-ups as connected
-    if (provider) {
-      for (const id of provider.powerUpIds) {
-        await admin
-          .from("user_connections")
-          .upsert(
-            {
-              user_id: user.id,
-              power_up_id: id,
-              provider: "plaid",
-              integration_status: "connected",
-            },
-            { onConflict: "user_id,power_up_id" }
-          );
-      }
     }
 
     // Kick off data sync in the background

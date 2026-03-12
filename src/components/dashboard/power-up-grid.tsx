@@ -16,6 +16,7 @@ interface PowerUpGridProps {
     requiresDemoPlaid?: boolean;
     linkToken?: string;
   } | void>;
+  onPlaidSuccess?: (powerUpId: string) => void;
   demoTargetId?: string;
   onDemoPlaidComplete?: () => void;
 }
@@ -26,6 +27,7 @@ export function PowerUpGrid({
   search,
   onSearchChange,
   onToggle,
+  onPlaidSuccess,
   demoTargetId,
   onDemoPlaidComplete,
 }: PowerUpGridProps) {
@@ -67,6 +69,7 @@ export function PowerUpGrid({
               key={powerUp.id}
               powerUp={powerUp}
               onToggle={onToggle}
+              onPlaidSuccess={onPlaidSuccess}
               demoTarget={powerUp.id === demoTargetId}
               onDemoPlaidComplete={powerUp.id === demoTargetId ? onDemoPlaidComplete : undefined}
             />

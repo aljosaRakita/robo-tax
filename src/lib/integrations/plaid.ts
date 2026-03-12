@@ -15,8 +15,22 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptToken } from "@/lib/encryption";
 import type { Database } from "@/lib/supabase/types";
+import fs from "fs";
+import path from "path";
 
 type IntegrationTokenRow = Database["public"]["Tables"]["integration_tokens"]["Row"];
+
+function logPlaidData(dataType: string, data: unknown) {
+  try {
+    const dir = path.join(process.cwd(), "data");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const filePath = path.join(dir, `plaid-${dataType}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    console.log(`[plaid] Logged ${dataType} data to ${filePath}`);
+  } catch (err) {
+    console.error(`[plaid] Failed to log ${dataType} data:`, err);
+  }
+}
 
 // ---- Singleton client ----
 
@@ -99,6 +113,7 @@ export async function syncAccounts(
   const admin = createAdminClient();
 
   const response = await client.accountsGet({ access_token: accessToken });
+  logPlaidData("accounts", response.data);
   const accounts = response.data.accounts;
 
   // Classify accounts
@@ -173,10 +188,26 @@ export async function syncTransactions(
   let hasMore = true;
 
   while (hasMore) {
-    const response = await client.transactionsSync({
-      access_token: accessToken,
-      cursor: cursor || undefined,
-    });
+    let response;
+    try {
+      response = await client.transactionsSync({
+        access_token: accessToken,
+        cursor: cursor || undefined,
+      });
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { error_code?: string } } };
+      const errorCode = axiosErr.response?.data?.error_code;
+      console.error("[plaid] transactionsSync error details:", JSON.stringify(axiosErr.response?.data, null, 2));
+
+      // Stale cursor from a previous access token — reset and retry
+      if (errorCode === "INVALID_FIELD" && cursor) {
+        console.log("[plaid] Stale cursor detected, retrying without cursor");
+        cursor = undefined;
+        allAdded = [];
+        continue;
+      }
+      throw err;
+    }
 
     const { added, has_more, next_cursor } = response.data;
 
@@ -195,6 +226,8 @@ export async function syncTransactions(
     cursor = next_cursor;
     hasMore = has_more;
   }
+
+  logPlaidData("transactions", { transaction_count: allAdded.length, transactions: allAdded, cursor });
 
   // Analyze transactions for strategy engine fields
   const selfEmploymentIncome = allAdded
@@ -263,6 +296,7 @@ export async function syncHoldings(
       access_token: accessToken,
     });
 
+    logPlaidData("holdings", response.data);
     const { holdings, securities } = response.data;
 
     const securityMap = new Map(
